@@ -24,7 +24,7 @@ func refresh_ui() -> void:
 		child.queue_free()
 
 	for good in GameData.goods_list:
-		var good_id := good.get("id", "")
+		var good_id: String = str(good.get("id", ""))
 		var row := HBoxContainer.new()
 		var name_label := Label.new()
 		name_label.text = "%s  Buy:%d Sell:%d Owned:%d" % [

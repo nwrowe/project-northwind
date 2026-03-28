@@ -24,9 +24,9 @@ func load_game() -> Dictionary:
 	var text := file.get_as_text()
 	file.close()
 
-	var parsed := JSON.parse_string(text)
+	var parsed: Variant = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {"success": false, "message": "Save data is invalid."}
 
-	GameState.load_from_dict(parsed)
+	GameState.load_from_dict(parsed as Dictionary)
 	return {"success": true, "message": "Game loaded."}

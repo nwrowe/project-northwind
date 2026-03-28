@@ -53,7 +53,7 @@ func _expand_bidirectional_routes(input_routes: Array) -> Array:
 	for route in input_routes:
 		expanded.append(route)
 		if route.get("bidirectional", false):
-			var reverse_route := route.duplicate(true)
+			var reverse_route: Dictionary = route.duplicate(true)
 			reverse_route["id"] = "%s_rev" % route["id"]
 			reverse_route["from"] = route["to"]
 			reverse_route["to"] = route["from"]
