@@ -14,7 +14,7 @@ static func load_json(path: String) -> Variant:
 	var text := file.get_as_text()
 	file.close()
 
-	var parsed := JSON.parse_string(text)
+	var parsed: Variant = JSON.parse_string(text)
 	if parsed == null:
 		push_error("Failed to parse JSON file: %s" % path)
 		return []
