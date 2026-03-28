@@ -1,0 +1,42 @@
+[
+  {
+    "id": "grain",
+    "name": "Grain",
+    "base_price": 12,
+    "volatility": 0.10,
+    "cargo_size": 1,
+    "category": "food"
+  },
+  {
+    "id": "cloth",
+    "name": "Cloth",
+    "base_price": 20,
+    "volatility": 0.12,
+    "cargo_size": 1,
+    "category": "textile"
+  },
+  {
+    "id": "spice",
+    "name": "Spice",
+    "base_price": 42,
+    "volatility": 0.18,
+    "cargo_size": 1,
+    "category": "luxury"
+  },
+  {
+    "id": "timber",
+    "name": "Timber",
+    "base_price": 16,
+    "volatility": 0.08,
+    "cargo_size": 2,
+    "category": "material"
+  },
+  {
+    "id": "oil",
+    "name": "Oil",
+    "base_price": 24,
+    "volatility": 0.14,
+    "cargo_size": 1,
+    "category": "commodity"
+  }
+]
