@@ -1,0 +1,38 @@
+[
+  {
+    "id": "deliver_grain_thalos",
+    "source_port": "aurelia",
+    "target_port": "thalos",
+    "good_id": "grain",
+    "quantity": 5,
+    "reward": 85,
+    "deadline_days": 7
+  },
+  {
+    "id": "deliver_cloth_cyr",
+    "source_port": "varenna",
+    "target_port": "cyr_port",
+    "good_id": "cloth",
+    "quantity": 4,
+    "reward": 72,
+    "deadline_days": 5
+  },
+  {
+    "id": "deliver_oil_varenna",
+    "source_port": "marsa_quay",
+    "target_port": "varenna",
+    "good_id": "oil",
+    "quantity": 4,
+    "reward": 68,
+    "deadline_days": 5
+  },
+  {
+    "id": "deliver_spice_thalos",
+    "source_port": "cyr_port",
+    "target_port": "thalos",
+    "good_id": "spice",
+    "quantity": 3,
+    "reward": 95,
+    "deadline_days": 4
+  }
+]
