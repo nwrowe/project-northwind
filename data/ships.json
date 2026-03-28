@@ -1,0 +1,22 @@
+[
+  {
+    "id": "coastal_sloop",
+    "name": "Coastal Sloop",
+    "cargo_capacity": 20,
+    "max_durability": 100,
+    "speed": 1.00,
+    "supply_efficiency": 1.00,
+    "upkeep_modifier": 1.00,
+    "base_price": 0
+  },
+  {
+    "id": "merchant_brig",
+    "name": "Merchant Brig",
+    "cargo_capacity": 35,
+    "max_durability": 120,
+    "speed": 0.90,
+    "supply_efficiency": 1.10,
+    "upkeep_modifier": 1.15,
+    "base_price": 450
+  }
+]
