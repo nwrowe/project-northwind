@@ -1,0 +1,72 @@
+[
+  {
+    "id": "storm_minor",
+    "name": "Minor Storm",
+    "type": "storm",
+    "weight": 1.00,
+    "min_risk": 0.00,
+    "effects": {
+      "durability_loss": 8,
+      "supply_loss": 1,
+      "money_loss": 0,
+      "cargo_loss_percent": 0.00
+    },
+    "text": "Rough seas slam the ship and force extra consumption of supplies."
+  },
+  {
+    "id": "storm_hard",
+    "name": "Heavy Storm",
+    "type": "storm",
+    "weight": 0.60,
+    "min_risk": 0.22,
+    "effects": {
+      "durability_loss": 16,
+      "supply_loss": 2,
+      "money_loss": 0,
+      "cargo_loss_percent": 0.10
+    },
+    "text": "A violent storm tears at the rigging and ruins part of the cargo."
+  },
+  {
+    "id": "pirates_light",
+    "name": "Suspicious Sails",
+    "type": "pirates",
+    "weight": 0.90,
+    "min_risk": 0.12,
+    "effects": {
+      "durability_loss": 4,
+      "supply_loss": 0,
+      "money_loss": 12,
+      "cargo_loss_percent": 0.00
+    },
+    "text": "Fast raiders shadow your ship until a payment convinces them to peel away."
+  },
+  {
+    "id": "pirates_raid",
+    "name": "Pirate Raid",
+    "type": "pirates",
+    "weight": 0.50,
+    "min_risk": 0.25,
+    "effects": {
+      "durability_loss": 10,
+      "supply_loss": 1,
+      "money_loss": 20,
+      "cargo_loss_percent": 0.15
+    },
+    "text": "Pirates board the ship, seize valuables, and leave splintered damage behind."
+  },
+  {
+    "id": "favorable_winds",
+    "name": "Favorable Winds",
+    "type": "boon",
+    "weight": 0.70,
+    "min_risk": 0.00,
+    "effects": {
+      "durability_loss": 0,
+      "supply_loss": -1,
+      "money_loss": 0,
+      "cargo_loss_percent": 0.00
+    },
+    "text": "A strong tailwind shortens the voyage and saves precious supplies."
+  }
+]
