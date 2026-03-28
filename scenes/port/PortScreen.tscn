@@ -1,0 +1,101 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/PortScreen.gd" id="1"]
+
+[node name="PortScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/HeaderPanel"]
+layout_mode = 2
+
+[node name="PortNameLabel" type="Label" parent="VBoxContainer/HeaderPanel/VBoxContainer"]
+layout_mode = 2
+text = "Port"
+
+[node name="DayMoneyLabel" type="Label" parent="VBoxContainer/HeaderPanel/VBoxContainer"]
+layout_mode = 2
+text = "Day 1   Money: 0"
+
+[node name="StatusPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/StatusPanel"]
+layout_mode = 2
+
+[node name="ShipLabel" type="Label" parent="VBoxContainer/StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Ship"
+
+[node name="DurabilityLabel" type="Label" parent="VBoxContainer/StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Durability"
+
+[node name="SuppliesLabel" type="Label" parent="VBoxContainer/StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Supplies"
+
+[node name="CargoLabel" type="Label" parent="VBoxContainer/StatusPanel/VBoxContainer"]
+layout_mode = 2
+text = "Cargo"
+
+[node name="ActionsPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ActionsPanel"]
+layout_mode = 2
+
+[node name="MarketButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Market"
+
+[node name="TravelButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Travel"
+
+[node name="RepairButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Repair"
+
+[node name="ResupplyButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Resupply"
+
+[node name="UpgradeButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Upgrades"
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Save"
+
+[node name="SummaryPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/SummaryPanel"]
+layout_mode = 2
+
+[node name="CargoSummaryLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
+layout_mode = 2
+text = "Cargo: Empty"
+
+[node name="ContractSummaryLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
+layout_mode = 2
+text = "Contracts: 0 available"
