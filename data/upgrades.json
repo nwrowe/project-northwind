@@ -1,0 +1,35 @@
+[
+  {
+    "id": "cargo_hold_1",
+    "name": "Expanded Cargo Hold",
+    "cost": 120,
+    "effects": {
+      "cargo_capacity_bonus": 5,
+      "max_durability_bonus": 0,
+      "speed_bonus": 0.00,
+      "supply_efficiency_bonus": 0.00
+    }
+  },
+  {
+    "id": "hull_reinforcement_1",
+    "name": "Hull Reinforcement",
+    "cost": 140,
+    "effects": {
+      "cargo_capacity_bonus": 0,
+      "max_durability_bonus": 15,
+      "speed_bonus": 0.00,
+      "supply_efficiency_bonus": 0.00
+    }
+  },
+  {
+    "id": "trimmed_sails_1",
+    "name": "Trimmed Sails",
+    "cost": 160,
+    "effects": {
+      "cargo_capacity_bonus": 0,
+      "max_durability_bonus": 0,
+      "speed_bonus": 0.10,
+      "supply_efficiency_bonus": 0.05
+    }
+  }
+]
