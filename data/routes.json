@@ -1,0 +1,58 @@
+[
+  {
+    "id": "aurelia_varenna",
+    "from": "aurelia",
+    "to": "varenna",
+    "distance": 2,
+    "risk": 0.10,
+    "bidirectional": true
+  },
+  {
+    "id": "aurelia_marsa",
+    "from": "aurelia",
+    "to": "marsa_quay",
+    "distance": 3,
+    "risk": 0.14,
+    "bidirectional": true
+  },
+  {
+    "id": "varenna_cyr",
+    "from": "varenna",
+    "to": "cyr_port",
+    "distance": 4,
+    "risk": 0.22,
+    "bidirectional": true
+  },
+  {
+    "id": "marsa_cyr",
+    "from": "marsa_quay",
+    "to": "cyr_port",
+    "distance": 4,
+    "risk": 0.25,
+    "bidirectional": true
+  },
+  {
+    "id": "cyr_thalos",
+    "from": "cyr_port",
+    "to": "thalos",
+    "distance": 5,
+    "risk": 0.32,
+    "bidirectional": true
+  },
+  {
+    "id": "varenna_thalos",
+    "from": "varenna",
+    "to": "thalos",
+    "distance": 5,
+    "risk": 0.28,
+    "bidirectional": true
+  },
+  {
+    "id": "marsa_thalos",
+    "from": "marsa_quay",
+    "to": "thalos",
+    "distance": 6,
+    "risk": 0.35,
+    "bidirectional": true
+  }
+]
