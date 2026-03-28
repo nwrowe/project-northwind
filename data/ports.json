@@ -1,0 +1,72 @@
+[
+  {
+    "id": "aurelia",
+    "name": "Aurelia",
+    "goods_modifiers": {
+      "grain": 0.90,
+      "cloth": 1.05,
+      "spice": 1.20,
+      "timber": 1.00,
+      "oil": 1.00
+    },
+    "repair_cost_modifier": 1.00,
+    "supply_cost_modifier": 0.95,
+    "contract_tier": 1
+  },
+  {
+    "id": "varenna",
+    "name": "Varenna",
+    "goods_modifiers": {
+      "grain": 1.05,
+      "cloth": 0.88,
+      "spice": 1.15,
+      "timber": 1.10,
+      "oil": 1.00
+    },
+    "repair_cost_modifier": 1.05,
+    "supply_cost_modifier": 1.00,
+    "contract_tier": 1
+  },
+  {
+    "id": "cyr_port",
+    "name": "Cyr Port",
+    "goods_modifiers": {
+      "grain": 1.10,
+      "cloth": 1.00,
+      "spice": 0.82,
+      "timber": 1.15,
+      "oil": 1.05
+    },
+    "repair_cost_modifier": 1.10,
+    "supply_cost_modifier": 1.08,
+    "contract_tier": 2
+  },
+  {
+    "id": "marsa_quay",
+    "name": "Marsa Quay",
+    "goods_modifiers": {
+      "grain": 0.82,
+      "cloth": 1.10,
+      "spice": 1.18,
+      "timber": 0.92,
+      "oil": 0.90
+    },
+    "repair_cost_modifier": 0.95,
+    "supply_cost_modifier": 0.90,
+    "contract_tier": 1
+  },
+  {
+    "id": "thalos",
+    "name": "Thalos",
+    "goods_modifiers": {
+      "grain": 1.15,
+      "cloth": 1.02,
+      "spice": 1.28,
+      "timber": 1.08,
+      "oil": 1.12
+    },
+    "repair_cost_modifier": 1.12,
+    "supply_cost_modifier": 1.10,
+    "contract_tier": 2
+  }
+]
