@@ -1,0 +1,19 @@
+# Godot 4+
+.godot/
+
+# Imports
+.import/
+
+# Exported builds
+/export/
+/build/
+
+# Mono / C#
+.mono/
+data_*/
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
