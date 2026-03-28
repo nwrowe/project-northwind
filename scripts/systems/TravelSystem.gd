@@ -7,8 +7,8 @@ func get_routes_from_current_port() -> Array:
 	return GameData.get_routes_from(GameState.current_port_id)
 
 func get_supply_cost(route: Dictionary) -> int:
-	var distance := float(route.get("distance", 0))
-	var efficiency := max(0.1, GameState.get_effective_supply_efficiency())
+	var distance: float = float(route.get("distance", 0))
+	var efficiency: float = max(0.1, GameState.get_effective_supply_efficiency())
 	return int(ceil(distance / efficiency))
 
 func can_travel(route: Dictionary) -> bool:

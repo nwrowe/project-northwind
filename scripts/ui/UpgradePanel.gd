@@ -21,7 +21,7 @@ func refresh_ui() -> void:
 
 		var button := Button.new()
 		button.text = "Buy"
-		var upgrade_id := upgrade.get("id", "")
+		var upgrade_id: String = str(upgrade.get("id", ""))
 		button.pressed.connect(func(): _buy_upgrade(upgrade_id))
 
 		row.add_child(label)
