@@ -9,6 +9,8 @@ var cargo: Dictionary = {}
 var owned_upgrades: Array[String] = []
 var day_count: int = 1
 var active_contracts: Array = []
+var completed_contract_ids: Array[String] = []
+var pending_status_message: String = ""
 
 func new_game() -> void:
 	current_port_id = "aurelia"
@@ -20,6 +22,8 @@ func new_game() -> void:
 	cargo = {}
 	day_count = 1
 	active_contracts = []
+	completed_contract_ids = []
+	pending_status_message = ""
 
 func to_dict() -> Dictionary:
 	return {
@@ -32,6 +36,7 @@ func to_dict() -> Dictionary:
 		"owned_upgrades": owned_upgrades,
 		"day_count": day_count,
 		"active_contracts": active_contracts,
+		"completed_contract_ids": completed_contract_ids,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -43,44 +48,74 @@ func load_from_dict(data: Dictionary) -> void:
 	cargo = data.get("cargo", {})
 	owned_upgrades = Array(data.get("owned_upgrades", []), TYPE_STRING, "", null)
 	day_count = int(data.get("day_count", 1))
-	active_contracts = data.get("active_contracts", [])
+	active_contracts = _normalize_active_contracts(data.get("active_contracts", []))
+	completed_contract_ids = Array(data.get("completed_contract_ids", []), TYPE_STRING, "", null)
+	pending_status_message = ""
+
+func _normalize_active_contracts(raw_contracts: Array) -> Array:
+	var normalized: Array = []
+	for entry in raw_contracts:
+		if entry is String:
+			var contract_id: String = str(entry)
+			var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
+			if contract.is_empty():
+				continue
+			var deadline_days: int = int(contract.get("deadline_days", 0))
+			normalized.append({
+				"contract_id": contract_id,
+				"accepted_day": day_count,
+				"deadline_day": day_count + deadline_days,
+				"status": "active",
+			})
+		elif entry is Dictionary:
+			var contract_id_dict: String = str(entry.get("contract_id", ""))
+			if contract_id_dict.is_empty() or GameData.contracts_by_id.get(contract_id_dict, {}).is_empty():
+				continue
+			var fallback_deadline: int = day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0))
+			normalized.append({
+				"contract_id": contract_id_dict,
+				"accepted_day": int(entry.get("accepted_day", day_count)),
+				"deadline_day": int(entry.get("deadline_day", fallback_deadline)),
+				"status": str(entry.get("status", "active")),
+			})
+	return normalized
 
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
 
 func get_effective_cargo_capacity() -> int:
-	var base_capacity := int(get_ship_def().get("cargo_capacity", 0))
-	var bonus := 0
+	var base_capacity: int = int(get_ship_def().get("cargo_capacity", 0))
+	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
 		bonus += int(effects.get("cargo_capacity_bonus", 0))
 	return base_capacity + bonus
 
 func get_effective_max_durability() -> int:
-	var base_durability := int(get_ship_def().get("max_durability", 0))
-	var bonus := 0
+	var base_durability: int = int(get_ship_def().get("max_durability", 0))
+	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
 		bonus += int(effects.get("max_durability_bonus", 0))
 	return base_durability + bonus
 
 func get_effective_supply_efficiency() -> float:
-	var base_eff := float(get_ship_def().get("supply_efficiency", 1.0))
-	var bonus := 0.0
+	var base_eff: float = float(get_ship_def().get("supply_efficiency", 1.0))
+	var bonus: float = 0.0
 	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
 		bonus += float(effects.get("supply_efficiency_bonus", 0.0))
 	return max(0.1, base_eff + bonus)
 
 func get_current_cargo_used() -> int:
-	var total := 0
+	var total: int = 0
 	for good_id in cargo.keys():
-		var qty := int(cargo[good_id])
-		var good := GameData.get_good(good_id)
-		var cargo_size := int(good.get("cargo_size", 1))
+		var qty: int = int(cargo[good_id])
+		var good: Dictionary = GameData.get_good(str(good_id))
+		var cargo_size: int = int(good.get("cargo_size", 1))
 		total += qty * cargo_size
 	return total
 
@@ -90,6 +125,7 @@ func has_upgrade(upgrade_id: String) -> bool:
 func apply_upgrade(upgrade_id: String) -> void:
 	if not has_upgrade(upgrade_id):
 		owned_upgrades.append(upgrade_id)
+		ship_durability = min(ship_durability, get_effective_max_durability())
 
 func add_cargo(good_id: String, qty: int) -> void:
 	cargo[good_id] = int(cargo.get(good_id, 0)) + qty
@@ -101,14 +137,15 @@ func apply_event_effects(effects: Dictionary) -> void:
 	supplies -= int(effects.get("supply_loss", 0))
 	money -= int(effects.get("money_loss", 0))
 
-	var cargo_loss_percent := float(effects.get("cargo_loss_percent", 0.0))
+	var cargo_loss_percent: float = float(effects.get("cargo_loss_percent", 0.0))
 	if cargo_loss_percent > 0.0:
-		for good_id in cargo.keys():
-			var qty := int(cargo[good_id])
-			var lost := int(floor(qty * cargo_loss_percent))
-			cargo[good_id] = max(0, qty - lost)
-			if int(cargo[good_id]) == 0:
-				cargo.erase(good_id)
+		for good_id in cargo.keys().duplicate():
+			var good_id_str: String = str(good_id)
+			var qty: int = int(cargo[good_id_str])
+			var lost: int = int(floor(qty * cargo_loss_percent))
+			cargo[good_id_str] = max(0, qty - lost)
+			if int(cargo[good_id_str]) == 0:
+				cargo.erase(good_id_str)
 
 	supplies = max(0, supplies)
 	money = max(0, money)
