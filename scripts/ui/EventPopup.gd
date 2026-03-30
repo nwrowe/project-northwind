@@ -18,7 +18,14 @@ func set_payload(new_payload: Dictionary) -> void:
 func refresh_ui() -> void:
 	event_name_label.text = payload.get("name", "Event")
 	event_text_label.text = payload.get("text", "")
-	outcome_label.text = payload.get("outcome_text", "")
+	var details: Array[String] = []
+	var outcome := str(payload.get("outcome_text", ""))
+	if not outcome.is_empty():
+		details.append(outcome)
+	var arrival := str(payload.get("arrival_summary", ""))
+	if not arrival.is_empty():
+		details.append(arrival)
+	outcome_label.text = "\n".join(details)
 
 func _on_continue_pressed() -> void:
 	ScreenRouter.show_port_screen()
