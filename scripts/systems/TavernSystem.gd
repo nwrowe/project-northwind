@@ -124,7 +124,7 @@ func _generate_candidate_pool(port_id: String) -> Array:
 
 func _make_officer_candidate(port_id: String, role: String, officer_num: int, base_seed: int) -> Dictionary:
 	var name = _random_name(base_seed + officer_num * 11)
-	var trait = str(TRAITS[(base_seed + officer_num * 7) % TRAITS.size()])
+	var personality_trait = str(TRAITS[(base_seed + officer_num * 7) % TRAITS.size()])
 	var sailing = 2 + ((base_seed + officer_num * 3) % 5)
 	var repair = 1 + ((base_seed + officer_num * 5) % 5)
 	var fighting = 1 + ((base_seed + officer_num * 7) % 5)
@@ -136,7 +136,7 @@ func _make_officer_candidate(port_id: String, role: String, officer_num: int, ba
 		"type": "officer",
 		"role": role,
 		"name": name,
-		"trait": trait,
+		"trait": personality_trait,
 		"signing_cost": signing_cost,
 		"sailing": sailing,
 		"repair": repair,
