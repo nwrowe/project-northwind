@@ -89,7 +89,7 @@ func _on_travel_pressed() -> void:
 		status_label.text = str(result.get("message", "Travel failed."))
 		return
 	if result.get("event_triggered", false):
-		var payload: Dictionary = result.get("event_payload", {}).duplicate(true)
+		var payload := result.get("event_payload", {}).duplicate(true)
 		payload["arrival_summary"] = result.get("arrival_summary", "")
 		ScreenRouter.show_event_popup(payload)
 	else:

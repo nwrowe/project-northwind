@@ -18,8 +18,8 @@ func get_max_buy_quantity(good_id: String) -> int:
 		return 0
 	var affordable_by_money := int(GameState.money / price)
 
-	var good: Dictionary = GameData.get_good(good_id)
-	var cargo_size := int(max(1, int(good.get("cargo_size", 1))))
+	var good := GameData.get_good(good_id)
+	var cargo_size := max(1, int(good.get("cargo_size", 1)))
 	var free_space := GameState.get_effective_cargo_capacity() - GameState.get_current_cargo_used()
 	var affordable_by_cargo := int(free_space / cargo_size)
 	return max(0, min(affordable_by_money, affordable_by_cargo))

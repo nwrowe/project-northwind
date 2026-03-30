@@ -57,7 +57,7 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	for entry in raw_contracts:
 		if entry is String:
 			var contract_id: String = str(entry)
-			var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
+			var contract := GameData.contracts_by_id.get(contract_id, {})
 			if contract.is_empty():
 				continue
 			var deadline_days := int(contract.get("deadline_days", 0))

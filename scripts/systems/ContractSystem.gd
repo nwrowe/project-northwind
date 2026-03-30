@@ -17,7 +17,7 @@ func accept_contract(contract_id: String) -> Dictionary:
 	if contract_id in GameState.completed_contract_ids:
 		return {"success": false, "message": "Contract already completed."}
 
-	var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
+	var contract := GameData.contracts_by_id.get(contract_id, {})
 	if contract.is_empty():
 		return {"success": false, "message": "Contract not found."}
 
@@ -60,7 +60,7 @@ func complete_contract(contract_id: String) -> Dictionary:
 	if not bool(view.get("is_completable", false)):
 		return {"success": false, "message": "Requirements not met at this port."}
 
-	var contract: Dictionary = view.get("contract", {})
+	var contract := view.get("contract", {})
 	var good_id: String = str(contract.get("good_id", ""))
 	var quantity := int(contract.get("quantity", 0))
 	var reward := int(contract.get("reward", 0))
@@ -162,11 +162,9 @@ func _expire_contract(contract_id: String) -> void:
 
 func _find_active_index(contract_id: String) -> int:
 	for i in GameState.active_contracts.size():
-		var entry: Variant = GameState.active_contracts[i]
-		if entry is Dictionary:
-			var entry_dict: Dictionary = entry
-			if str(entry_dict.get("contract_id", "")) == contract_id:
-				return i
+		var entry := GameState.active_contracts[i]
+		if entry is Dictionary and str(entry.get("contract_id", "")) == contract_id:
+			return i
 	return -1
 
 func _find_active_entry(contract_id: String) -> Dictionary:
