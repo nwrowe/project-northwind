@@ -12,6 +12,12 @@ var active_contracts: Array = []
 var completed_contract_ids: Array[String] = []
 var pending_status_message: String = ""
 
+var reserve_ship_ids: Array[String] = []
+var crew_count: int = 4
+var officer_assignments: Dictionary = {}
+var trust_rating: int = 0
+var infamy_rating: int = 0
+
 func new_game() -> void:
 	current_port_id = "aurelia"
 	money = 150
@@ -24,6 +30,13 @@ func new_game() -> void:
 	active_contracts = []
 	completed_contract_ids = []
 	pending_status_message = ""
+	reserve_ship_ids = []
+	crew_count = 4
+	officer_assignments = {
+		"captain": "Vacant",
+	}
+	trust_rating = 0
+	infamy_rating = 0
 
 func to_dict() -> Dictionary:
 	return {
@@ -37,6 +50,11 @@ func to_dict() -> Dictionary:
 		"day_count": day_count,
 		"active_contracts": active_contracts,
 		"completed_contract_ids": completed_contract_ids,
+		"reserve_ship_ids": reserve_ship_ids,
+		"crew_count": crew_count,
+		"officer_assignments": officer_assignments,
+		"trust_rating": trust_rating,
+		"infamy_rating": infamy_rating,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -51,6 +69,11 @@ func load_from_dict(data: Dictionary) -> void:
 	active_contracts = _normalize_active_contracts(data.get("active_contracts", []))
 	completed_contract_ids = Array(data.get("completed_contract_ids", []), TYPE_STRING, "", null)
 	pending_status_message = ""
+	reserve_ship_ids = Array(data.get("reserve_ship_ids", []), TYPE_STRING, "", null)
+	crew_count = int(data.get("crew_count", 4))
+	officer_assignments = data.get("officer_assignments", {"captain": "Vacant"})
+	trust_rating = int(data.get("trust_rating", 0))
+	infamy_rating = int(data.get("infamy_rating", 0))
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -83,32 +106,65 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
 
-func get_effective_cargo_capacity() -> int:
-	var base_capacity: int = int(get_ship_def().get("cargo_capacity", 0))
+func _get_upgrade_bonus_int(key: String) -> int:
 	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
 		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
-		bonus += int(effects.get("cargo_capacity_bonus", 0))
-	return base_capacity + bonus
+		bonus += int(effects.get(key, 0))
+	return bonus
 
-func get_effective_max_durability() -> int:
-	var base_durability: int = int(get_ship_def().get("max_durability", 0))
-	var bonus: int = 0
-	for upgrade_id in owned_upgrades:
-		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
-		var effects: Dictionary = upgrade.get("effects", {})
-		bonus += int(effects.get("max_durability_bonus", 0))
-	return base_durability + bonus
-
-func get_effective_supply_efficiency() -> float:
-	var base_eff: float = float(get_ship_def().get("supply_efficiency", 1.0))
+func _get_upgrade_bonus_float(key: String) -> float:
 	var bonus: float = 0.0
 	for upgrade_id in owned_upgrades:
 		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
-		bonus += float(effects.get("supply_efficiency_bonus", 0.0))
-	return max(0.1, base_eff + bonus)
+		bonus += float(effects.get(key, 0.0))
+	return bonus
+
+func get_effective_cargo_capacity() -> int:
+	var base_capacity: int = int(get_ship_def().get("cargo_capacity", 0))
+	return max(0, base_capacity + _get_upgrade_bonus_int("cargo_capacity_bonus"))
+
+func get_effective_max_durability() -> int:
+	var base_durability: int = int(get_ship_def().get("max_durability", 0))
+	return max(1, base_durability + _get_upgrade_bonus_int("max_durability_bonus"))
+
+func get_effective_supply_efficiency() -> float:
+	var base_eff: float = float(get_ship_def().get("supply_efficiency", 1.0))
+	return max(0.1, base_eff + _get_upgrade_bonus_float("supply_efficiency_bonus"))
+
+func get_effective_speed() -> float:
+	var base_speed: float = float(get_ship_def().get("speed", 1.0))
+	return max(0.1, base_speed + _get_upgrade_bonus_float("speed_bonus"))
+
+func get_effective_firepower() -> int:
+	var base_value: int = int(get_ship_def().get("firepower", 0))
+	return max(0, base_value + _get_upgrade_bonus_int("firepower_bonus"))
+
+func get_effective_hull_armor() -> int:
+	var base_value: int = int(get_ship_def().get("hull_armor", 0))
+	return max(0, base_value + _get_upgrade_bonus_int("hull_armor_bonus"))
+
+func get_effective_evasion() -> int:
+	var base_value: int = int(get_ship_def().get("evasion", 0))
+	return max(0, base_value + _get_upgrade_bonus_int("evasion_bonus"))
+
+func get_effective_intimidation() -> int:
+	var base_value: int = int(get_ship_def().get("intimidation", 0))
+	return max(0, base_value + _get_upgrade_bonus_int("intimidation_bonus"))
+
+func get_effective_crew_capacity() -> int:
+	var base_value: int = int(get_ship_def().get("crew_capacity", 0))
+	return max(1, base_value + _get_upgrade_bonus_int("crew_capacity_bonus"))
+
+func get_effective_officer_slots() -> int:
+	var base_value: int = int(get_ship_def().get("officer_slots", 0))
+	return max(1, base_value + _get_upgrade_bonus_int("officer_slots_bonus"))
+
+func get_effective_boarding_strength() -> int:
+	var base_value: int = int(get_ship_def().get("boarding_strength", 0))
+	return max(0, base_value + _get_upgrade_bonus_int("boarding_strength_bonus"))
 
 func get_current_cargo_used() -> int:
 	var total: int = 0
@@ -126,11 +182,16 @@ func apply_upgrade(upgrade_id: String) -> void:
 	if not has_upgrade(upgrade_id):
 		owned_upgrades.append(upgrade_id)
 		ship_durability = min(ship_durability, get_effective_max_durability())
+		crew_count = min(crew_count, get_effective_crew_capacity())
 
 func add_cargo(good_id: String, qty: int) -> void:
 	cargo[good_id] = int(cargo.get(good_id, 0)) + qty
 	if int(cargo[good_id]) <= 0:
 		cargo.erase(good_id)
+
+func change_reputation(trust_delta: int, infamy_delta: int) -> void:
+	trust_rating += trust_delta
+	infamy_rating += infamy_delta
 
 func apply_event_effects(effects: Dictionary) -> void:
 	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
