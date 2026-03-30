@@ -1,6 +1,7 @@
 extends Control
 
 var travel_system := TravelSystem.new()
+var contract_system := ContractSystem.new()
 var selected_route_id: String = ""
 
 @onready var current_port_label = $VBoxContainer/HeaderPanel/VBoxContainer/CurrentPortLabel
@@ -22,24 +23,44 @@ func refresh_ui() -> void:
 	for child in routes_list.get_children():
 		child.queue_free()
 
+	var active_contracts := contract_system.get_active_contracts()
 	var routes := travel_system.get_routes_from_current_port()
 	for route in routes:
 		var route_id: String = str(route.get("id", ""))
 		var row_button := Button.new()
+		row_button.custom_minimum_size = Vector2(0, 56)
 		var destination := GameData.get_port(route.get("to", ""))
 		var supply_cost := travel_system.get_supply_cost(route)
-		var prefix := "[Selected] " if route_id == selected_route_id else ""
-		row_button.text = "%s%s  Dist:%s  Risk:%.2f  Supply:%d" % [
+		var is_selected := route_id == selected_route_id
+		var prefix := "[Selected] " if is_selected else ""
+		var risk_level := _risk_label(float(route.get("risk", 0.0)))
+		var contract_hint := _contract_route_hint(str(route.get("to", "")), active_contracts)
+		row_button.text = "%s%s  Dist:%s  %s  Supply:%d%s" % [
 			prefix,
 			destination.get("name", route.get("to", "")),
 			str(route.get("distance", 0)),
-			float(route.get("risk", 0.0)),
-			supply_cost
+			risk_level,
+			supply_cost,
+			contract_hint
 		]
 		row_button.pressed.connect(func(): _select_route(route_id))
 		routes_list.add_child(row_button)
 
 	_update_selected_route_label()
+
+func _risk_label(risk: float) -> String:
+	if risk < 0.25:
+		return "Risk:Low"
+	if risk < 0.5:
+		return "Risk:Med"
+	return "Risk:High"
+
+func _contract_route_hint(destination_port_id: String, active_contracts: Array) -> String:
+	for active in active_contracts:
+		var contract: Dictionary = active.get("contract", {})
+		if str(contract.get("target_port", "")) == destination_port_id:
+			return "  [Contract]"
+	return ""
 
 func _select_route(route_id: String) -> void:
 	selected_route_id = route_id
@@ -68,7 +89,9 @@ func _on_travel_pressed() -> void:
 		status_label.text = str(result.get("message", "Travel failed."))
 		return
 	if result.get("event_triggered", false):
-		ScreenRouter.show_event_popup(result.get("event_payload", {}))
+		var payload := result.get("event_payload", {}).duplicate(true)
+		payload["arrival_summary"] = result.get("arrival_summary", "")
+		ScreenRouter.show_event_popup(payload)
 	else:
 		ScreenRouter.show_port_screen()
 

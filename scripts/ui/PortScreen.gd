@@ -1,5 +1,7 @@
 extends Control
 
+var contract_system := ContractSystem.new()
+
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
 @onready var ship_label = $VBoxContainer/StatusPanel/VBoxContainer/ShipLabel
@@ -20,18 +22,21 @@ func _ready() -> void:
 	$VBoxContainer/ActionsPanel/VBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	refresh_ui()
+	if not GameState.pending_status_message.is_empty():
+		_set_status(GameState.pending_status_message)
+		GameState.pending_status_message = ""
 
 func refresh_ui() -> void:
 	var port := GameData.get_port(GameState.current_port_id)
 	var ship := GameState.get_ship_def()
 	port_name_label.text = port.get("name", "Unknown Port")
-	day_money_label.text = "Day %d   Money: %d" % [GameState.day_count, GameState.money]
+	day_money_label.text = "Day %d   Money: %d   Completed: %d" % [GameState.day_count, GameState.money, GameState.completed_contract_ids.size()]
 	ship_label.text = "Ship: %s" % ship.get("name", "Unknown Ship")
 	durability_label.text = "Durability: %d / %d" % [GameState.ship_durability, GameState.get_effective_max_durability()]
 	supplies_label.text = "Supplies: %d" % GameState.supplies
 	cargo_label.text = "Cargo: %d / %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity()]
 	cargo_summary_label.text = "Cargo: %s" % _build_cargo_summary()
-	contract_summary_label.text = "Contracts: %d available | %d active" % [GameData.get_contracts_for_port(GameState.current_port_id).size(), GameState.active_contracts.size()]
+	contract_summary_label.text = _build_contract_summary()
 
 func _build_cargo_summary() -> String:
 	if GameState.cargo.is_empty():
@@ -40,6 +45,20 @@ func _build_cargo_summary() -> String:
 	for good_id in GameState.cargo.keys():
 		parts.append("%s x%d" % [GameData.get_good(good_id).get("name", good_id), int(GameState.cargo[good_id])])
 	return ", ".join(parts)
+
+func _build_contract_summary() -> String:
+	var available := contract_system.get_available_contracts_for_current_port().size()
+	var active := contract_system.get_active_contracts()
+	var completable := contract_system.get_completable_contracts_for_current_port().size()
+	if active.is_empty():
+		return "Contracts: %d available | No active jobs" % available
+	var nearest_deadline := 9999
+	for entry in active:
+		nearest_deadline = min(nearest_deadline, int(entry.get("days_remaining", 9999)))
+	var urgency := ""
+	if nearest_deadline <= 1:
+		urgency = " | Deadline urgent"
+	return "Contracts: %d available | %d active | %d ready now%s" % [available, active.size(), completable, urgency]
 
 func _set_status(message: String) -> void:
 	action_status_label.text = message
