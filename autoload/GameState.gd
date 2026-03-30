@@ -57,7 +57,7 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	for entry in raw_contracts:
 		if entry is String:
 			var contract_id: String = str(entry)
-			var contract := GameData.contracts_by_id.get(contract_id, {})
+			var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
 			if contract.is_empty():
 				continue
 			var deadline_days := int(contract.get("deadline_days", 0))
@@ -103,46 +103,3 @@ func get_effective_max_durability() -> int:
 func get_effective_supply_efficiency() -> float:
 	var base_eff := float(get_ship_def().get("supply_efficiency", 1.0))
 	var bonus := 0.0
-	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
-		var effects: Dictionary = upgrade.get("effects", {})
-		bonus += float(effects.get("supply_efficiency_bonus", 0.0))
-	return max(0.1, base_eff + bonus)
-
-func get_current_cargo_used() -> int:
-	var total := 0
-	for good_id in cargo.keys():
-		var qty := int(cargo[good_id])
-		var good := GameData.get_good(good_id)
-		var cargo_size := int(good.get("cargo_size", 1))
-		total += qty * cargo_size
-	return total
-
-func has_upgrade(upgrade_id: String) -> bool:
-	return upgrade_id in owned_upgrades
-
-func apply_upgrade(upgrade_id: String) -> void:
-	if not has_upgrade(upgrade_id):
-		owned_upgrades.append(upgrade_id)
-
-func add_cargo(good_id: String, qty: int) -> void:
-	cargo[good_id] = int(cargo.get(good_id, 0)) + qty
-	if int(cargo[good_id]) <= 0:
-		cargo.erase(good_id)
-
-func apply_event_effects(effects: Dictionary) -> void:
-	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
-	supplies -= int(effects.get("supply_loss", 0))
-	money -= int(effects.get("money_loss", 0))
-
-	var cargo_loss_percent := float(effects.get("cargo_loss_percent", 0.0))
-	if cargo_loss_percent > 0.0:
-		for good_id in cargo.keys():
-			var qty := int(cargo[good_id])
-			var lost := int(floor(qty * cargo_loss_percent))
-			cargo[good_id] = max(0, qty - lost)
-			if int(cargo[good_id]) == 0:
-				cargo.erase(good_id)
-
-	supplies = max(0, supplies)
-	money = max(0, money)

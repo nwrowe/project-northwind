@@ -1,23 +1,36 @@
 ; Engine configuration file.
-; It's best edited using the editor and not directly.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
+
 config/name="Project Northwind"
 run/main_scene="res://scenes/Main.tscn"
-config/features=PackedStringArray("4.4")
+config/features=PackedStringArray("4.6")
 
 [autoload]
+
 GameData="*res://autoload/GameData.gd"
 GameState="*res://autoload/GameState.gd"
 SaveManager="*res://autoload/SaveManager.gd"
 ScreenRouter="*res://autoload/ScreenRouter.gd"
 
 [display]
+
 window/size/viewport_width=720
 window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [rendering]
+
 renderer/rendering_method="mobile"
