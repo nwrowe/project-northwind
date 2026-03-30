@@ -1,0 +1,37 @@
+[
+  {
+    "id": "temperate_harbor",
+    "name": "Temperate Harbor",
+    "description": "Mild seasons, workable forests, and reliable fishing make this climate flexible and forgiving.",
+    "resource_bias": ["fish", "grain", "timber", "herbs"],
+    "refining_bias": ["milled grain", "cured fish", "basic lumber", "ropework"]
+  },
+  {
+    "id": "woven_hinterland_coast",
+    "name": "Woven Hinterland Coast",
+    "description": "River-fed flats and textile farming support cloth, dyes, and traded staples.",
+    "resource_bias": ["flax", "grain", "fish", "dye plants"],
+    "refining_bias": ["cloth", "sailcloth", "dyed textiles", "oils"]
+  },
+  {
+    "id": "arid_spice_coast",
+    "name": "Arid Spice Coast",
+    "description": "Dry heat, mineral ground, and caravan trade favor spice, salt, and high-value goods.",
+    "resource_bias": ["spice plants", "salt", "stone", "goat game"],
+    "refining_bias": ["spice blends", "preserved meats", "stonework", "perfumed oils"]
+  },
+  {
+    "id": "delta_marsh",
+    "name": "Delta Marsh",
+    "description": "Wet channels and brackish shallows reward patient fishers, gatherers, and practical traders.",
+    "resource_bias": ["fish", "reeds", "oilseed", "waterfowl"],
+    "refining_bias": ["lamp oil", "reed fiber", "salted fish", "basketry"]
+  },
+  {
+    "id": "luxury_isles",
+    "name": "Luxury Isles",
+    "description": "Warm island waters and elite demand encourage rare goods, fine processing, and prestige cargo.",
+    "resource_bias": ["pearls", "rare herbs", "fine fish", "citrus"],
+    "refining_bias": ["luxury preserves", "fine oils", "dyes", "ornamental goods"]
+  }
+]

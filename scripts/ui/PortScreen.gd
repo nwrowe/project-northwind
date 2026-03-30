@@ -1,6 +1,7 @@
 extends Control
 
 var contract_system := ContractSystem.new()
+var climate_system := ClimateSystem.new()
 
 const PORT_FLAVOR := {
 	"aurelia": {
@@ -33,6 +34,9 @@ const PORT_FLAVOR := {
 @onready var cargo_label = $VBoxContainer/StatusPanel/VBoxContainer/CargoLabel
 @onready var local_flavor_label = $VBoxContainer/TownPanel/VBoxContainer/LocalFlavorLabel
 @onready var npc_label = $VBoxContainer/TownPanel/VBoxContainer/NpcLabel
+@onready var climate_label = $VBoxContainer/TownPanel/VBoxContainer/ClimateLabel
+@onready var gathering_label = $VBoxContainer/TownPanel/VBoxContainer/GatheringLabel
+@onready var refining_label = $VBoxContainer/TownPanel/VBoxContainer/RefiningLabel
 @onready var cargo_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
 @onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
@@ -40,6 +44,7 @@ const PORT_FLAVOR := {
 func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
+	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
@@ -68,6 +73,9 @@ func refresh_ui() -> void:
 	cargo_label.text = "Cargo: %d / %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity()]
 	local_flavor_label.text = str(flavor.get("overview", ""))
 	npc_label.text = str(flavor.get("npc", ""))
+	climate_label.text = "Climate: %s" % climate_system.get_climate_name_for_current_port()
+	gathering_label.text = "Wild resources: %s" % climate_system.get_gathering_summary_for_current_port()
+	refining_label.text = "Refining specialties: %s" % climate_system.get_refining_summary_for_current_port()
 	cargo_summary_label.text = "Cargo: %s" % _build_cargo_summary()
 	contract_summary_label.text = _build_contract_summary()
 
@@ -104,6 +112,9 @@ func _on_travel_pressed() -> void:
 
 func _on_contracts_pressed() -> void:
 	ScreenRouter.show_contract_screen()
+
+func _on_tavern_pressed() -> void:
+	ScreenRouter.show_tavern_screen()
 
 func _on_shipyard_pressed() -> void:
 	ScreenRouter.show_shipyard_screen()
