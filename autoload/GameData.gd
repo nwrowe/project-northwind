@@ -8,6 +8,7 @@ var events_list: Array = []
 var upgrades_list: Array = []
 var contracts_list: Array = []
 var rumors_list: Array = []
+var climates_list: Array = []
 
 var goods_by_id: Dictionary = {}
 var ports_by_id: Dictionary = {}
@@ -15,6 +16,7 @@ var ships_by_id: Dictionary = {}
 var routes_by_id: Dictionary = {}
 var upgrades_by_id: Dictionary = {}
 var contracts_by_id: Dictionary = {}
+var climates_by_id: Dictionary = {}
 
 const GOODS_PATH := "res://data/goods.json"
 const PORTS_PATH := "res://data/ports.json"
@@ -24,6 +26,7 @@ const EVENTS_PATH := "res://data/events.json"
 const UPGRADES_PATH := "res://data/upgrades.json"
 const CONTRACTS_PATH := "res://data/contracts.json"
 const RUMORS_PATH := "res://data/rumors.json"
+const CLIMATES_PATH := "res://data/climates.json"
 
 func load_all_data() -> void:
 	goods_list = JsonLoader.load_json(GOODS_PATH)
@@ -34,12 +37,14 @@ func load_all_data() -> void:
 	upgrades_list = JsonLoader.load_json(UPGRADES_PATH)
 	contracts_list = JsonLoader.load_json(CONTRACTS_PATH)
 	rumors_list = JsonLoader.load_json(RUMORS_PATH)
+	climates_list = JsonLoader.load_json(CLIMATES_PATH)
 
 	goods_by_id = _index_by_id(goods_list)
 	ports_by_id = _index_by_id(ports_list)
 	ships_by_id = _index_by_id(ships_list)
 	upgrades_by_id = _index_by_id(upgrades_list)
 	contracts_by_id = _index_by_id(contracts_list)
+	climates_by_id = _index_by_id(climates_list)
 
 	routes_list = _expand_bidirectional_routes(routes_list)
 	routes_by_id = _index_by_id(routes_list)
@@ -78,6 +83,9 @@ func get_route(id: String) -> Dictionary:
 
 func get_upgrade(id: String) -> Dictionary:
 	return upgrades_by_id.get(id, {})
+
+func get_climate(id: String) -> Dictionary:
+	return climates_by_id.get(id, {})
 
 func get_routes_from(port_id: String) -> Array:
 	var results: Array = []

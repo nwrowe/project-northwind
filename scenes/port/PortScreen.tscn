@@ -71,6 +71,21 @@ layout_mode = 2
 text = "NPC flavor"
 autowrap_mode = 3
 
+[node name="ClimateLabel" type="Label" parent="VBoxContainer/TownPanel/VBoxContainer"]
+layout_mode = 2
+text = "Climate"
+autowrap_mode = 3
+
+[node name="GatheringLabel" type="Label" parent="VBoxContainer/TownPanel/VBoxContainer"]
+layout_mode = 2
+text = "Gathering"
+autowrap_mode = 3
+
+[node name="RefiningLabel" type="Label" parent="VBoxContainer/TownPanel/VBoxContainer"]
+layout_mode = 2
+text = "Refining"
+autowrap_mode = 3
+
 [node name="ServicePanel" type="PanelContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3

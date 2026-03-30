@@ -2,6 +2,9 @@
   {
     "id": "aurelia",
     "name": "Aurelia",
+    "climate_id": "temperate_harbor",
+    "gathering_options": ["coastal fishing", "grain harvest", "timber cutting", "herb foraging"],
+    "refining_options": ["milled grain", "cured fish", "basic lumber", "ropework"],
     "goods_modifiers": {
       "grain": 0.90,
       "cloth": 1.05,
@@ -16,6 +19,9 @@
   {
     "id": "varenna",
     "name": "Varenna",
+    "climate_id": "woven_hinterland_coast",
+    "gathering_options": ["flax farming", "net fishing", "grain harvest", "dye plant gathering"],
+    "refining_options": ["cloth weaving", "sailcloth", "dyed textiles", "pressed oils"],
     "goods_modifiers": {
       "grain": 1.05,
       "cloth": 0.88,
@@ -30,6 +36,9 @@
   {
     "id": "cyr_port",
     "name": "Cyr Port",
+    "climate_id": "arid_spice_coast",
+    "gathering_options": ["spice harvest", "salt scraping", "stone quarrying", "goat hunting"],
+    "refining_options": ["spice blends", "preserved meats", "stone blocks", "perfumed oils"],
     "goods_modifiers": {
       "grain": 1.10,
       "cloth": 1.00,
@@ -44,6 +53,9 @@
   {
     "id": "marsa_quay",
     "name": "Marsa Quay",
+    "climate_id": "delta_marsh",
+    "gathering_options": ["marsh fishing", "reed cutting", "oilseed harvest", "waterfowl hunting"],
+    "refining_options": ["lamp oil", "reed fiber", "salted fish", "woven basketry"],
     "goods_modifiers": {
       "grain": 0.82,
       "cloth": 1.10,
@@ -58,6 +70,9 @@
   {
     "id": "thalos",
     "name": "Thalos",
+    "climate_id": "luxury_isles",
+    "gathering_options": ["fine fishing", "rare herb picking", "pearl diving", "citrus harvest"],
+    "refining_options": ["luxury preserves", "fine oils", "decorative dyes", "ornamental goods"],
     "goods_modifiers": {
       "grain": 1.15,
       "cloth": 1.02,
