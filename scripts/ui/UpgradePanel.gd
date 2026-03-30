@@ -14,26 +14,37 @@ func refresh_ui() -> void:
 		child.queue_free()
 
 	for upgrade in upgrade_system.get_available_upgrades():
-		var row := VBoxContainer.new()
+		var card := PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var outer := HBoxContainer.new()
+		outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_child(outer)
+
+		var info_box := VBoxContainer.new()
+		info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		outer.add_child(info_box)
+
 		var label := Label.new()
 		label.text = "%s  Cost:%d" % [upgrade.get("name", "Upgrade"), int(upgrade.get("cost", 0))]
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info_box.add_child(label)
 
 		var detail := Label.new()
 		detail.text = _build_effect_summary(upgrade.get("effects", {}))
 		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info_box.add_child(detail)
 
 		var button := Button.new()
 		button.text = "Buy"
+		button.custom_minimum_size = Vector2(120, 52)
 		var upgrade_id: String = str(upgrade.get("id", ""))
 		button.pressed.connect(func(): _buy_upgrade(upgrade_id))
+		outer.add_child(button)
 
-		row.add_child(label)
-		row.add_child(detail)
-		row.add_child(button)
-		upgrade_list.add_child(row)
+		upgrade_list.add_child(card)
 
 func _build_effect_summary(effects: Dictionary) -> String:
 	var parts: Array[String] = []
