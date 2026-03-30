@@ -1,0 +1,72 @@
+[
+  {
+    "id": "aurelia_rumor_1",
+    "port_id": "aurelia",
+    "speaker": "Lysa at the Lantern Cup",
+    "title": "Calm eastern lanes",
+    "text": "Captains coming in from Varenna say the eastern lane has been calm lately. Safe profits are better than brave losses."
+  },
+  {
+    "id": "aurelia_rumor_2",
+    "port_id": "aurelia",
+    "speaker": "Old Ferrin",
+    "title": "Cheap grain moves fast",
+    "text": "Grain leaves here cheap, but don't sit on it too long. Every small harbor master thinks staple cargo is his best idea."
+  },
+  {
+    "id": "varenna_rumor_1",
+    "port_id": "varenna",
+    "speaker": "Ida the Factor",
+    "title": "Cloth buyers inland",
+    "text": "There is always another buyer for good cloth. If your hold is empty in Varenna, you are probably making a mistake."
+  },
+  {
+    "id": "varenna_rumor_2",
+    "port_id": "varenna",
+    "speaker": "Sailor Bren",
+    "title": "Watch the deadlines",
+    "text": "The contracts here look easy until you lose a day in rough water. Quick routes matter more than greedy routes."
+  },
+  {
+    "id": "cyr_port_rumor_1",
+    "port_id": "cyr_port",
+    "speaker": "Captain Sorell",
+    "title": "Spice pays, but bites",
+    "text": "Spice can make a captain rich by dusk and broke by dawn. The buyers are generous and the waters are not."
+  },
+  {
+    "id": "cyr_port_rumor_2",
+    "port_id": "cyr_port",
+    "speaker": "Dockhand Pell",
+    "title": "Heavy weather north",
+    "text": "Northbound ships have been coming in scraped raw. Fine cargo is no comfort when the hull starts singing in a storm."
+  },
+  {
+    "id": "marsa_quay_rumor_1",
+    "port_id": "marsa_quay",
+    "speaker": "Quartermaster Toma",
+    "title": "Oil is steady money",
+    "text": "Oil won't make you legendary, but steady captains retire better than famous ones."
+  },
+  {
+    "id": "marsa_quay_rumor_2",
+    "port_id": "marsa_quay",
+    "speaker": "Harbor cook Sena",
+    "title": "Stock up before risk",
+    "text": "No captain boasts about buying spare stores, but the hungry ones stop boasting entirely."
+  },
+  {
+    "id": "thalos_rumor_1",
+    "port_id": "thalos",
+    "speaker": "Archivist Nera",
+    "title": "Luxury buyers are patient until they are not",
+    "text": "The rich in Thalos pay well for rare cargo, but miss a contract and they remember your name for the wrong reason."
+  },
+  {
+    "id": "thalos_rumor_2",
+    "port_id": "thalos",
+    "speaker": "House Agent Meret",
+    "title": "Big holds, bigger mistakes",
+    "text": "A larger ship forgives many things, but it also tempts captains into routes they have not earned yet."
+  }
+]

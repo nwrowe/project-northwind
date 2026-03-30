@@ -10,6 +10,7 @@ const UPGRADE_PANEL := preload("res://scenes/upgrades/UpgradePanel.tscn")
 const CONTRACT_SCREEN := preload("res://scenes/contracts/ContractScreen.tscn")
 const REPAIR_SCREEN := preload("res://scenes/repair/RepairScreen.tscn")
 const SHIPYARD_SCREEN := preload("res://scenes/shipyard/ShipyardScreen.tscn")
+const TAVERN_SCREEN := preload("res://scenes/tavern/TavernScreen.tscn")
 
 func set_root(node: Node) -> void:
 	screen_root = node
@@ -46,6 +47,9 @@ func show_repair_screen() -> void:
 
 func show_shipyard_screen() -> void:
 	_show_scene(SHIPYARD_SCREEN)
+
+func show_tavern_screen() -> void:
+	_show_scene(TAVERN_SCREEN)
 
 func show_event_popup(payload: Dictionary) -> void:
 	var popup := _show_scene(EVENT_POPUP)
