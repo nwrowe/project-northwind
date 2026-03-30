@@ -46,12 +46,16 @@ func get_random_rumor(exclude_id: String = "") -> Dictionary:
 	if filtered.is_empty():
 		filtered = rumors
 
-	var index: int = randi() % filtered.size()
-	return filtered[index]
+	var rumor_index: int = randi() % filtered.size()
+	return filtered[rumor_index]
 
 func ensure_candidates_for_current_port() -> void:
 	var port_id: String = GameState.current_port_id
-	if not GameState.tavern_candidates_by_port.has(port_id) or Array(GameState.tavern_candidates_by_port[port_id]).is_empty():
+	if not GameState.tavern_candidates_by_port.has(port_id):
+		GameState.tavern_candidates_by_port[port_id] = _generate_candidate_pool(port_id)
+		return
+	var existing: Array = GameState.tavern_candidates_by_port.get(port_id, [])
+	if existing.is_empty():
 		GameState.tavern_candidates_by_port[port_id] = _generate_candidate_pool(port_id)
 
 func get_candidates_for_current_port() -> Array:
@@ -67,10 +71,10 @@ func hire_candidate(candidate_id: String) -> Dictionary:
 	ensure_candidates_for_current_port()
 	var port_id: String = GameState.current_port_id
 	var candidates: Array = GameState.tavern_candidates_by_port.get(port_id, [])
-	var index: int = _find_candidate_index(candidates, candidate_id)
-	if index < 0:
+	var candidate_index: int = _find_candidate_index(candidates, candidate_id)
+	if candidate_index < 0:
 		return {"success": false, "message": "That recruit is no longer available."}
-	var candidate: Dictionary = candidates[index]
+	var candidate: Dictionary = candidates[candidate_index]
 	var role: String = str(candidate.get("role", ""))
 	var cost: int = int(candidate.get("signing_cost", 0))
 	if GameState.money < cost:
@@ -83,7 +87,7 @@ func hire_candidate(candidate_id: String) -> Dictionary:
 		GameState.money -= cost
 		GameState.crew_count += amount
 		GameState.change_reputation(1, 0)
-		candidates.remove_at(index)
+		candidates.remove_at(candidate_index)
 		GameState.tavern_candidates_by_port[port_id] = candidates
 		return {"success": true, "message": "Hired %d deckhands for %d coins." % [amount, cost]}
 
@@ -95,7 +99,7 @@ func hire_candidate(candidate_id: String) -> Dictionary:
 	GameState.money -= cost
 	GameState.officer_assignments[role] = candidate
 	GameState.change_reputation(1, 0)
-	candidates.remove_at(index)
+	candidates.remove_at(candidate_index)
 	GameState.tavern_candidates_by_port[port_id] = candidates
 	return {"success": true, "message": "Hired %s as %s for %d coins." % [candidate.get("name", "Officer"), role.capitalize(), cost]}
 
@@ -118,17 +122,17 @@ func _generate_candidate_pool(port_id: String) -> Array:
 	pool.append(_make_crew_candidate(port_id, base_seed))
 	return pool
 
-func _make_officer_candidate(port_id: String, role: String, index: int, base_seed: int) -> Dictionary:
-	var name: String = _random_name(base_seed + index * 11)
-	var trait: String = TRAITS[(base_seed + index * 7) % TRAITS.size()]
-	var sailing: int = 2 + ((base_seed + index * 3) % 5)
-	var repair: int = 1 + ((base_seed + index * 5) % 5)
-	var fighting: int = 1 + ((base_seed + index * 7) % 5)
-	var navigation: int = 1 + ((base_seed + index * 9) % 5)
-	var leadership: int = 1 + ((base_seed + index * 13) % 5)
+func _make_officer_candidate(port_id: String, role: String, officer_num: int, base_seed: int) -> Dictionary:
+	var name: String = _random_name(base_seed + officer_num * 11)
+	var trait: String = TRAITS[(base_seed + officer_num * 7) % TRAITS.size()]
+	var sailing: int = 2 + ((base_seed + officer_num * 3) % 5)
+	var repair: int = 1 + ((base_seed + officer_num * 5) % 5)
+	var fighting: int = 1 + ((base_seed + officer_num * 7) % 5)
+	var navigation: int = 1 + ((base_seed + officer_num * 9) % 5)
+	var leadership: int = 1 + ((base_seed + officer_num * 13) % 5)
 	var signing_cost: int = 70 + sailing * 8 + repair * 6 + fighting * 7 + navigation * 6 + leadership * 8
 	return {
-		"id": "%s_%s_%d_%d" % [port_id, role, GameState.day_count, index],
+		"id": "%s_%s_%d_%d" % [port_id, role, GameState.day_count, officer_num],
 		"type": "officer",
 		"role": role,
 		"name": name,
@@ -168,6 +172,7 @@ func _find_candidate_index(candidates: Array, candidate_id: String) -> int:
 	return -1
 
 func _random_name(seed_value: int) -> String:
-	var first: String = FIRST_NAMES[abs(seed_value) % FIRST_NAMES.size()]
-	var last: String = LAST_NAMES[abs(seed_value / 3) % LAST_NAMES.size()]
-	return "%s %s" % [first, last]
+	var first_name: String = FIRST_NAMES[abs(seed_value) % FIRST_NAMES.size()]
+	var last_seed: int = int(abs(seed_value) / 3)
+	var last_name: String = LAST_NAMES[last_seed % LAST_NAMES.size()]
+	return "%s %s" % [first_name, last_name]
