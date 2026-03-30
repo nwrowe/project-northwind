@@ -30,10 +30,14 @@ func refresh_ui() -> void:
 		child.queue_free()
 
 	if not GameState.reserve_ship_ids.is_empty():
+		var reserve_card := PanelContainer.new()
+		reserve_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var reserve_label := Label.new()
 		reserve_label.text = "Reserve ships: %s" % ", ".join(GameState.reserve_ship_ids)
 		reserve_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		ship_list.add_child(reserve_label)
+		reserve_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		reserve_card.add_child(reserve_label)
+		ship_list.add_child(reserve_card)
 
 	var candidates: Array = shipyard_system.get_purchase_candidates()
 	if candidates.is_empty():
@@ -46,30 +50,41 @@ func refresh_ui() -> void:
 		_add_ship_row(ship)
 
 func _add_ship_row(ship: Dictionary) -> void:
-	var row := VBoxContainer.new()
-	var ship_id: String = str(ship.get("id", ""))
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
+	var outer := HBoxContainer.new()
+	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_child(outer)
+
+	var info_box := VBoxContainer.new()
+	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.add_child(info_box)
+
+	var ship_id: String = str(ship.get("id", ""))
 	var label := Label.new()
 	label.text = shipyard_system.build_ship_summary(ship)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(label)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_box.add_child(label)
 
 	var compare_label := Label.new()
 	compare_label.text = _build_compare_text(ship)
 	compare_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(compare_label)
+	compare_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_box.add_child(compare_label)
 
 	var buy_button := Button.new()
 	buy_button.text = "Buy"
-	buy_button.custom_minimum_size = Vector2(0, 52)
+	buy_button.custom_minimum_size = Vector2(120, 52)
 	var can_buy: Dictionary = shipyard_system.can_buy_ship(ship_id)
 	buy_button.disabled = not bool(can_buy.get("success", false))
 	if buy_button.disabled:
 		buy_button.tooltip_text = str(can_buy.get("message", "Cannot buy."))
 	buy_button.pressed.connect(func(): _buy_ship(ship_id))
-	row.add_child(buy_button)
+	outer.add_child(buy_button)
 
-	ship_list.add_child(row)
+	ship_list.add_child(card)
 
 func _build_compare_text(ship: Dictionary) -> String:
 	var current_ship: Dictionary = GameState.get_ship_def()

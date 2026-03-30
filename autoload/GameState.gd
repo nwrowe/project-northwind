@@ -17,6 +17,7 @@ var crew_count: int = 4
 var officer_assignments: Dictionary = {}
 var trust_rating: int = 0
 var infamy_rating: int = 0
+var tavern_candidates_by_port: Dictionary = {}
 
 func new_game() -> void:
 	current_port_id = "aurelia"
@@ -32,11 +33,10 @@ func new_game() -> void:
 	pending_status_message = ""
 	reserve_ship_ids = []
 	crew_count = 4
-	officer_assignments = {
-		"captain": "Vacant",
-	}
+	officer_assignments = {}
 	trust_rating = 0
 	infamy_rating = 0
+	tavern_candidates_by_port = {}
 
 func to_dict() -> Dictionary:
 	return {
@@ -55,6 +55,7 @@ func to_dict() -> Dictionary:
 		"officer_assignments": officer_assignments,
 		"trust_rating": trust_rating,
 		"infamy_rating": infamy_rating,
+		"tavern_candidates_by_port": tavern_candidates_by_port,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -71,9 +72,10 @@ func load_from_dict(data: Dictionary) -> void:
 	pending_status_message = ""
 	reserve_ship_ids = Array(data.get("reserve_ship_ids", []), TYPE_STRING, "", null)
 	crew_count = int(data.get("crew_count", 4))
-	officer_assignments = data.get("officer_assignments", {"captain": "Vacant"})
+	officer_assignments = data.get("officer_assignments", {})
 	trust_rating = int(data.get("trust_rating", 0))
 	infamy_rating = int(data.get("infamy_rating", 0))
+	tavern_candidates_by_port = data.get("tavern_candidates_by_port", {})
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -174,6 +176,9 @@ func get_current_cargo_used() -> int:
 		var cargo_size: int = int(good.get("cargo_size", 1))
 		total += qty * cargo_size
 	return total
+
+func get_active_officer_count() -> int:
+	return officer_assignments.size()
 
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrade_id in owned_upgrades
