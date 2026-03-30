@@ -13,6 +13,7 @@ extends Control
 func _ready() -> void:
 	$VBoxContainer/ActionsPanel/VBoxContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/TravelButton.pressed.connect(_on_travel_pressed)
+	$VBoxContainer/ActionsPanel/VBoxContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
@@ -30,7 +31,7 @@ func refresh_ui() -> void:
 	supplies_label.text = "Supplies: %d" % GameState.supplies
 	cargo_label.text = "Cargo: %d / %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity()]
 	cargo_summary_label.text = "Cargo: %s" % _build_cargo_summary()
-	contract_summary_label.text = "Contracts: %d available" % GameData.get_contracts_for_port(GameState.current_port_id).size()
+	contract_summary_label.text = "Contracts: %d available | %d active" % [GameData.get_contracts_for_port(GameState.current_port_id).size(), GameState.active_contracts.size()]
 
 func _build_cargo_summary() -> String:
 	if GameState.cargo.is_empty():
@@ -48,6 +49,9 @@ func _on_market_pressed() -> void:
 
 func _on_travel_pressed() -> void:
 	ScreenRouter.show_travel_screen()
+
+func _on_contracts_pressed() -> void:
+	ScreenRouter.show_contract_screen()
 
 func _on_repair_pressed() -> void:
 	var port := GameData.get_port(GameState.current_port_id)
