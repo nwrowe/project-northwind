@@ -38,9 +38,13 @@ func buy_ship(ship_id: String) -> Dictionary:
 
 	var ship: Dictionary = GameData.get_ship(ship_id)
 	var price: int = int(ship.get("base_price", 0))
+	if not GameState.ship_id in GameState.reserve_ship_ids:
+		GameState.reserve_ship_ids.append(GameState.ship_id)
 	GameState.money -= price
 	GameState.ship_id = ship_id
+	GameState.reserve_ship_ids.erase(ship_id)
 	GameState.ship_durability = GameState.get_effective_max_durability()
+	GameState.crew_count = min(GameState.crew_count, GameState.get_effective_crew_capacity())
 	GameState.pending_status_message = "Purchased %s for %d coins." % [ship.get("name", ship_id), price]
 
 	return {
@@ -51,11 +55,13 @@ func buy_ship(ship_id: String) -> Dictionary:
 	}
 
 func build_ship_summary(ship: Dictionary) -> String:
-	return "%s  Cost:%d  Cargo:%d  Durability:%d  Speed:%.2f  Supply Eff:%.2f" % [
+	return "%s  Cost:%d  Cargo:%d  Durability:%d  Firepower:%d  Armor:%d  Crew:%d  Officers:%d" % [
 		ship.get("name", "Ship"),
 		int(ship.get("base_price", 0)),
 		int(ship.get("cargo_capacity", 0)),
 		int(ship.get("max_durability", 0)),
-		float(ship.get("speed", 1.0)),
-		float(ship.get("supply_efficiency", 1.0)),
+		int(ship.get("firepower", 0)),
+		int(ship.get("hull_armor", 0)),
+		int(ship.get("crew_capacity", 0)),
+		int(ship.get("officer_slots", 0)),
 	]

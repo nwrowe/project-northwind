@@ -16,14 +16,24 @@ func refresh_ui() -> void:
 	var current_ship: Dictionary = GameState.get_ship_def()
 	header_label.text = "Shipyard"
 	current_ship_label.text = "Current Ship: %s" % shipyard_system.build_ship_summary(current_ship)
-	cargo_status_label.text = "Money: %d  |  Cargo used: %d / %d" % [
+	cargo_status_label.text = "Money: %d | Cargo: %d / %d | Crew: %d / %d | Trust: %d | Infamy: %d" % [
 		GameState.money,
 		GameState.get_current_cargo_used(),
 		GameState.get_effective_cargo_capacity(),
+		GameState.crew_count,
+		GameState.get_effective_crew_capacity(),
+		GameState.trust_rating,
+		GameState.infamy_rating,
 	]
 
 	for child in ship_list.get_children():
 		child.queue_free()
+
+	if not GameState.reserve_ship_ids.is_empty():
+		var reserve_label := Label.new()
+		reserve_label.text = "Reserve ships: %s" % ", ".join(GameState.reserve_ship_ids)
+		reserve_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		ship_list.add_child(reserve_label)
 
 	var candidates: Array = shipyard_system.get_purchase_candidates()
 	if candidates.is_empty():
@@ -63,11 +73,15 @@ func _add_ship_row(ship: Dictionary) -> void:
 
 func _build_compare_text(ship: Dictionary) -> String:
 	var current_ship: Dictionary = GameState.get_ship_def()
-	return "Cargo %+d | Durability %+d | Speed %+0.2f | Supply Eff %+0.2f" % [
+	return "Cargo %+d | Durability %+d | Firepower %+d | Armor %+d | Crew %+d | Officers %+d | Evasion %+d | Intimidation %+d" % [
 		int(ship.get("cargo_capacity", 0)) - int(current_ship.get("cargo_capacity", 0)),
 		int(ship.get("max_durability", 0)) - int(current_ship.get("max_durability", 0)),
-		float(ship.get("speed", 1.0)) - float(current_ship.get("speed", 1.0)),
-		float(ship.get("supply_efficiency", 1.0)) - float(current_ship.get("supply_efficiency", 1.0)),
+		int(ship.get("firepower", 0)) - int(current_ship.get("firepower", 0)),
+		int(ship.get("hull_armor", 0)) - int(current_ship.get("hull_armor", 0)),
+		int(ship.get("crew_capacity", 0)) - int(current_ship.get("crew_capacity", 0)),
+		int(ship.get("officer_slots", 0)) - int(current_ship.get("officer_slots", 0)),
+		int(ship.get("evasion", 0)) - int(current_ship.get("evasion", 0)),
+		int(ship.get("intimidation", 0)) - int(current_ship.get("intimidation", 0)),
 	]
 
 func _buy_ship(ship_id: String) -> void:

@@ -7,7 +7,14 @@
       "cargo_capacity_bonus": 5,
       "max_durability_bonus": 0,
       "speed_bonus": 0.00,
-      "supply_efficiency_bonus": 0.00
+      "supply_efficiency_bonus": 0.00,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 0,
+      "evasion_bonus": 0,
+      "intimidation_bonus": 0,
+      "crew_capacity_bonus": 0,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 0
     }
   },
   {
@@ -18,7 +25,14 @@
       "cargo_capacity_bonus": 0,
       "max_durability_bonus": 15,
       "speed_bonus": 0.00,
-      "supply_efficiency_bonus": 0.00
+      "supply_efficiency_bonus": 0.00,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 1,
+      "evasion_bonus": -1,
+      "intimidation_bonus": 0,
+      "crew_capacity_bonus": 0,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 0
     }
   },
   {
@@ -29,7 +43,86 @@
       "cargo_capacity_bonus": 0,
       "max_durability_bonus": 0,
       "speed_bonus": 0.10,
-      "supply_efficiency_bonus": 0.05
+      "supply_efficiency_bonus": 0.05,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 0,
+      "evasion_bonus": 1,
+      "intimidation_bonus": 0,
+      "crew_capacity_bonus": 0,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 0
+    }
+  },
+  {
+    "id": "deck_cannons_1",
+    "name": "Deck Cannons",
+    "cost": 220,
+    "effects": {
+      "cargo_capacity_bonus": -2,
+      "max_durability_bonus": 0,
+      "speed_bonus": -0.03,
+      "supply_efficiency_bonus": 0.00,
+      "firepower_bonus": 3,
+      "hull_armor_bonus": 0,
+      "evasion_bonus": 0,
+      "intimidation_bonus": 2,
+      "crew_capacity_bonus": 0,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 1
+    }
+  },
+  {
+    "id": "hardened_hull_1",
+    "name": "Hardened Hull",
+    "cost": 260,
+    "effects": {
+      "cargo_capacity_bonus": 0,
+      "max_durability_bonus": 20,
+      "speed_bonus": -0.04,
+      "supply_efficiency_bonus": 0.00,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 3,
+      "evasion_bonus": -1,
+      "intimidation_bonus": 1,
+      "crew_capacity_bonus": 0,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 0
+    }
+  },
+  {
+    "id": "marine_berths_1",
+    "name": "Marine Berths",
+    "cost": 180,
+    "effects": {
+      "cargo_capacity_bonus": -1,
+      "max_durability_bonus": 0,
+      "speed_bonus": 0.00,
+      "supply_efficiency_bonus": -0.02,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 0,
+      "evasion_bonus": 0,
+      "intimidation_bonus": 1,
+      "crew_capacity_bonus": 4,
+      "officer_slots_bonus": 0,
+      "boarding_strength_bonus": 2
+    }
+  },
+  {
+    "id": "officer_quarters_1",
+    "name": "Officer Quarters",
+    "cost": 210,
+    "effects": {
+      "cargo_capacity_bonus": -1,
+      "max_durability_bonus": 0,
+      "speed_bonus": 0.00,
+      "supply_efficiency_bonus": 0.00,
+      "firepower_bonus": 0,
+      "hull_armor_bonus": 0,
+      "evasion_bonus": 0,
+      "intimidation_bonus": 0,
+      "crew_capacity_bonus": 2,
+      "officer_slots_bonus": 1,
+      "boarding_strength_bonus": 0
     }
   }
 ]

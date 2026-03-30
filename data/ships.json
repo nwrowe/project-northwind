@@ -7,7 +7,15 @@
     "speed": 1.00,
     "supply_efficiency": 1.00,
     "upkeep_modifier": 1.00,
-    "base_price": 0
+    "base_price": 0,
+    "firepower": 0,
+    "hull_armor": 0,
+    "evasion": 3,
+    "intimidation": 0,
+    "crew_capacity": 8,
+    "officer_slots": 1,
+    "cannon_slots": 1,
+    "boarding_strength": 2
   },
   {
     "id": "merchant_brig",
@@ -17,6 +25,14 @@
     "speed": 0.90,
     "supply_efficiency": 1.10,
     "upkeep_modifier": 1.15,
-    "base_price": 450
+    "base_price": 450,
+    "firepower": 2,
+    "hull_armor": 2,
+    "evasion": 1,
+    "intimidation": 2,
+    "crew_capacity": 16,
+    "officer_slots": 2,
+    "cannon_slots": 3,
+    "boarding_strength": 4
   }
 ]
