@@ -8,6 +8,7 @@ const TRAVEL_SCREEN := preload("res://scenes/travel/TravelScreen.tscn")
 const EVENT_POPUP := preload("res://scenes/events/EventPopup.tscn")
 const UPGRADE_PANEL := preload("res://scenes/upgrades/UpgradePanel.tscn")
 const CONTRACT_SCREEN := preload("res://scenes/contracts/ContractScreen.tscn")
+const REPAIR_SCREEN := preload("res://scenes/repair/RepairScreen.tscn")
 
 func set_root(node: Node) -> void:
 	screen_root = node
@@ -38,6 +39,9 @@ func show_upgrade_panel() -> void:
 
 func show_contract_screen() -> void:
 	_show_scene(CONTRACT_SCREEN)
+
+func show_repair_screen() -> void:
+	_show_scene(REPAIR_SCREEN)
 
 func show_event_popup(payload: Dictionary) -> void:
 	var popup := _show_scene(EVENT_POPUP)
