@@ -9,6 +9,8 @@ var cargo: Dictionary = {}
 var owned_upgrades: Array[String] = []
 var day_count: int = 1
 var active_contracts: Array = []
+var completed_contract_ids: Array[String] = []
+var pending_status_message: String = ""
 
 func new_game() -> void:
 	current_port_id = "aurelia"
@@ -20,6 +22,8 @@ func new_game() -> void:
 	cargo = {}
 	day_count = 1
 	active_contracts = []
+	completed_contract_ids = []
+	pending_status_message = ""
 
 func to_dict() -> Dictionary:
 	return {
@@ -32,6 +36,7 @@ func to_dict() -> Dictionary:
 		"owned_upgrades": owned_upgrades,
 		"day_count": day_count,
 		"active_contracts": active_contracts,
+		"completed_contract_ids": completed_contract_ids,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -43,7 +48,36 @@ func load_from_dict(data: Dictionary) -> void:
 	cargo = data.get("cargo", {})
 	owned_upgrades = Array(data.get("owned_upgrades", []), TYPE_STRING, "", null)
 	day_count = int(data.get("day_count", 1))
-	active_contracts = data.get("active_contracts", [])
+	active_contracts = _normalize_active_contracts(data.get("active_contracts", []))
+	completed_contract_ids = Array(data.get("completed_contract_ids", []), TYPE_STRING, "", null)
+	pending_status_message = ""
+
+func _normalize_active_contracts(raw_contracts: Array) -> Array:
+	var normalized: Array = []
+	for entry in raw_contracts:
+		if entry is String:
+			var contract_id: String = str(entry)
+			var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
+			if contract.is_empty():
+				continue
+			var deadline_days := int(contract.get("deadline_days", 0))
+			normalized.append({
+				"contract_id": contract_id,
+				"accepted_day": day_count,
+				"deadline_day": day_count + deadline_days,
+				"status": "active",
+			})
+		elif entry is Dictionary:
+			var contract_id_dict: String = str(entry.get("contract_id", ""))
+			if contract_id_dict.is_empty() or GameData.contracts_by_id.get(contract_id_dict, {}).is_empty():
+				continue
+			normalized.append({
+				"contract_id": contract_id_dict,
+				"accepted_day": int(entry.get("accepted_day", day_count)),
+				"deadline_day": int(entry.get("deadline_day", day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0)))),
+				"status": str(entry.get("status", "active")),
+			})
+	return normalized
 
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
