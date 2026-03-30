@@ -17,11 +17,11 @@ func accept_contract(contract_id: String) -> Dictionary:
 	if contract_id in GameState.completed_contract_ids:
 		return {"success": false, "message": "Contract already completed."}
 
-	var contract := GameData.contracts_by_id.get(contract_id, {})
+	var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
 	if contract.is_empty():
 		return {"success": false, "message": "Contract not found."}
 
-	var deadline_days := int(contract.get("deadline_days", 0))
+	var deadline_days: int = int(contract.get("deadline_days", 0))
 	GameState.active_contracts.append({
 		"contract_id": contract_id,
 		"accepted_day": GameState.day_count,
@@ -41,6 +41,7 @@ func get_active_contracts() -> Array:
 			continue
 		results.append(_build_contract_view(entry, contract))
 	return results
+
 func get_completable_contracts_for_current_port() -> Array:
 	var results: Array = []
 	for view in get_active_contracts():
@@ -49,11 +50,11 @@ func get_completable_contracts_for_current_port() -> Array:
 	return results
 
 func complete_contract(contract_id: String) -> Dictionary:
-	var active_index := _find_active_index(contract_id)
+	var active_index: int = _find_active_index(contract_id)
 	if active_index < 0:
 		return {"success": false, "message": "Contract is not active."}
 
-	var view := _get_contract_view_for_index(active_index)
+	var view: Dictionary = _get_contract_view_for_index(active_index)
 	if view.is_empty():
 		return {"success": false, "message": "Contract data is missing."}
 	if not bool(view.get("is_completable", false)):
@@ -61,8 +62,8 @@ func complete_contract(contract_id: String) -> Dictionary:
 
 	var contract: Dictionary = view.get("contract", {})
 	var good_id: String = str(contract.get("good_id", ""))
-	var quantity := int(contract.get("quantity", 0))
-	var reward := int(contract.get("reward", 0))
+	var quantity: int = int(contract.get("quantity", 0))
+	var reward: int = int(contract.get("reward", 0))
 
 	GameState.add_cargo(good_id, -quantity)
 	GameState.money += reward
@@ -80,7 +81,7 @@ func complete_contract(contract_id: String) -> Dictionary:
 func resolve_contracts_on_arrival() -> Dictionary:
 	var completed_messages: Array[String] = []
 	var expired_messages: Array[String] = []
-	var completable_count := 0
+	var completable_count: int = 0
 
 	var contract_ids: Array[String] = []
 	for entry in GameState.active_contracts:
@@ -88,7 +89,7 @@ func resolve_contracts_on_arrival() -> Dictionary:
 			contract_ids.append(str(entry.get("contract_id", "")))
 
 	for contract_id in contract_ids:
-		var view := _get_contract_view(contract_id)
+		var view: Dictionary = _get_contract_view(contract_id)
 		if view.is_empty():
 			continue
 		if bool(view.get("is_expired", false)):
@@ -96,7 +97,7 @@ func resolve_contracts_on_arrival() -> Dictionary:
 			expired_messages.append("Expired: %s" % view.get("summary", contract_id))
 			continue
 		if bool(view.get("is_completable", false)):
-			var result := complete_contract(contract_id)
+			var result: Dictionary = complete_contract(contract_id)
 			if bool(result.get("success", false)):
 				completed_messages.append(str(result.get("message", "Contract completed.")))
 			continue
@@ -110,7 +111,7 @@ func resolve_contracts_on_arrival() -> Dictionary:
 	}
 
 func _get_contract_view(contract_id: String) -> Dictionary:
-	var index := _find_active_index(contract_id)
+	var index: int = _find_active_index(contract_id)
 	if index < 0:
 		return {}
 	return _get_contract_view_for_index(index)
@@ -128,15 +129,15 @@ func _get_contract_view_for_index(index: int) -> Dictionary:
 func _build_contract_view(entry: Dictionary, contract: Dictionary) -> Dictionary:
 	var contract_id: String = str(entry.get("contract_id", ""))
 	var good_id: String = str(contract.get("good_id", ""))
-	var quantity := int(contract.get("quantity", 0))
-	var deadline_day := int(entry.get("deadline_day", GameState.day_count))
-	var days_remaining := deadline_day - GameState.day_count
-	var cargo_have := int(GameState.cargo.get(good_id, 0))
-	var at_destination := str(contract.get("target_port", "")) == GameState.current_port_id
-	var is_expired := GameState.day_count > deadline_day
-	var is_completable := at_destination and not is_expired and cargo_have >= quantity
-	var target_port := GameData.get_port(str(contract.get("target_port", "")))
-	var summary := "%s x%d -> %s" % [
+	var quantity: int = int(contract.get("quantity", 0))
+	var deadline_day: int = int(entry.get("deadline_day", GameState.day_count))
+	var days_remaining: int = deadline_day - GameState.day_count
+	var cargo_have: int = int(GameState.cargo.get(good_id, 0))
+	var at_destination: bool = str(contract.get("target_port", "")) == GameState.current_port_id
+	var is_expired: bool = GameState.day_count > deadline_day
+	var is_completable: bool = at_destination and not is_expired and cargo_have >= quantity
+	var target_port: Dictionary = GameData.get_port(str(contract.get("target_port", "")))
+	var summary: String = "%s x%d -> %s" % [
 		GameData.get_good(good_id).get("name", good_id),
 		quantity,
 		target_port.get("name", str(contract.get("target_port", "")))
@@ -155,7 +156,7 @@ func _build_contract_view(entry: Dictionary, contract: Dictionary) -> Dictionary
 	}
 
 func _expire_contract(contract_id: String) -> void:
-	var index := _find_active_index(contract_id)
+	var index: int = _find_active_index(contract_id)
 	if index >= 0:
 		GameState.active_contracts.remove_at(index)
 
@@ -169,7 +170,7 @@ func _find_active_index(contract_id: String) -> int:
 	return -1
 
 func _find_active_entry(contract_id: String) -> Dictionary:
-	var index := _find_active_index(contract_id)
+	var index: int = _find_active_index(contract_id)
 	if index < 0:
 		return {}
 	return GameState.active_contracts[index]

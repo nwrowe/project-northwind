@@ -60,7 +60,7 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 			var contract: Dictionary = GameData.contracts_by_id.get(contract_id, {})
 			if contract.is_empty():
 				continue
-			var deadline_days := int(contract.get("deadline_days", 0))
+			var deadline_days: int = int(contract.get("deadline_days", 0))
 			normalized.append({
 				"contract_id": contract_id,
 				"accepted_day": day_count,
@@ -71,10 +71,11 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 			var contract_id_dict: String = str(entry.get("contract_id", ""))
 			if contract_id_dict.is_empty() or GameData.contracts_by_id.get(contract_id_dict, {}).is_empty():
 				continue
+			var fallback_deadline: int = day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0))
 			normalized.append({
 				"contract_id": contract_id_dict,
 				"accepted_day": int(entry.get("accepted_day", day_count)),
-				"deadline_day": int(entry.get("deadline_day", day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0)))),
+				"deadline_day": int(entry.get("deadline_day", fallback_deadline)),
 				"status": str(entry.get("status", "active")),
 			})
 	return normalized
@@ -83,23 +84,68 @@ func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
 
 func get_effective_cargo_capacity() -> int:
-	var base_capacity := int(get_ship_def().get("cargo_capacity", 0))
-	var bonus := 0
+	var base_capacity: int = int(get_ship_def().get("cargo_capacity", 0))
+	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
 		bonus += int(effects.get("cargo_capacity_bonus", 0))
 	return base_capacity + bonus
 
 func get_effective_max_durability() -> int:
-	var base_durability := int(get_ship_def().get("max_durability", 0))
-	var bonus := 0
+	var base_durability: int = int(get_ship_def().get("max_durability", 0))
+	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
-		var upgrade := GameData.get_upgrade(upgrade_id)
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
 		var effects: Dictionary = upgrade.get("effects", {})
 		bonus += int(effects.get("max_durability_bonus", 0))
 	return base_durability + bonus
 
 func get_effective_supply_efficiency() -> float:
-	var base_eff := float(get_ship_def().get("supply_efficiency", 1.0))
-	var bonus := 0.0
+	var base_eff: float = float(get_ship_def().get("supply_efficiency", 1.0))
+	var bonus: float = 0.0
+	for upgrade_id in owned_upgrades:
+		var upgrade: Dictionary = GameData.get_upgrade(upgrade_id)
+		var effects: Dictionary = upgrade.get("effects", {})
+		bonus += float(effects.get("supply_efficiency_bonus", 0.0))
+	return max(0.1, base_eff + bonus)
+
+func get_current_cargo_used() -> int:
+	var total: int = 0
+	for good_id in cargo.keys():
+		var qty: int = int(cargo[good_id])
+		var good: Dictionary = GameData.get_good(str(good_id))
+		var cargo_size: int = int(good.get("cargo_size", 1))
+		total += qty * cargo_size
+	return total
+
+func has_upgrade(upgrade_id: String) -> bool:
+	return upgrade_id in owned_upgrades
+
+func apply_upgrade(upgrade_id: String) -> void:
+	if not has_upgrade(upgrade_id):
+		owned_upgrades.append(upgrade_id)
+		ship_durability = min(ship_durability, get_effective_max_durability())
+
+func add_cargo(good_id: String, qty: int) -> void:
+	cargo[good_id] = int(cargo.get(good_id, 0)) + qty
+	if int(cargo[good_id]) <= 0:
+		cargo.erase(good_id)
+
+func apply_event_effects(effects: Dictionary) -> void:
+	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
+	supplies -= int(effects.get("supply_loss", 0))
+	money -= int(effects.get("money_loss", 0))
+
+	var cargo_loss_percent: float = float(effects.get("cargo_loss_percent", 0.0))
+	if cargo_loss_percent > 0.0:
+		for good_id in cargo.keys().duplicate():
+			var good_id_str: String = str(good_id)
+			var qty: int = int(cargo[good_id_str])
+			var lost: int = int(floor(qty * cargo_loss_percent))
+			cargo[good_id_str] = max(0, qty - lost)
+			if int(cargo[good_id_str]) == 0:
+				cargo.erase(good_id_str)
+
+	supplies = max(0, supplies)
+	money = max(0, money)

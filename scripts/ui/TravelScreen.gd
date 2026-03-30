@@ -16,25 +16,25 @@ func _ready() -> void:
 	refresh_ui()
 
 func refresh_ui() -> void:
-	var port := GameData.get_port(GameState.current_port_id)
+	var port: Dictionary = GameData.get_port(GameState.current_port_id)
 	current_port_label.text = "Current Port: %s" % port.get("name", GameState.current_port_id)
 	ship_status_label.text = "Supplies: %d   Durability: %d" % [GameState.supplies, GameState.ship_durability]
 
 	for child in routes_list.get_children():
 		child.queue_free()
 
-	var active_contracts := contract_system.get_active_contracts()
-	var routes := travel_system.get_routes_from_current_port()
+	var active_contracts: Array = contract_system.get_active_contracts()
+	var routes: Array = travel_system.get_routes_from_current_port()
 	for route in routes:
 		var route_id: String = str(route.get("id", ""))
 		var row_button := Button.new()
 		row_button.custom_minimum_size = Vector2(0, 56)
-		var destination := GameData.get_port(route.get("to", ""))
-		var supply_cost := travel_system.get_supply_cost(route)
-		var is_selected := route_id == selected_route_id
+		var destination: Dictionary = GameData.get_port(route.get("to", ""))
+		var supply_cost: int = travel_system.get_supply_cost(route)
+		var is_selected: bool = route_id == selected_route_id
 		var prefix := "[Selected] " if is_selected else ""
-		var risk_level := _risk_label(float(route.get("risk", 0.0)))
-		var contract_hint := _contract_route_hint(str(route.get("to", "")), active_contracts)
+		var risk_level: String = _risk_label(float(route.get("risk", 0.0)))
+		var contract_hint: String = _contract_route_hint(str(route.get("to", "")), active_contracts)
 		row_button.text = "%s%s  Dist:%s  %s  Supply:%d%s" % [
 			prefix,
 			destination.get("name", route.get("to", "")),
@@ -71,8 +71,8 @@ func _update_selected_route_label() -> void:
 	if selected_route_id.is_empty():
 		selected_route_label.text = "Selected Route: none"
 		return
-	var route := GameData.get_route(selected_route_id)
-	var destination := GameData.get_port(route.get("to", ""))
+	var route: Dictionary = GameData.get_route(selected_route_id)
+	var destination: Dictionary = GameData.get_port(route.get("to", ""))
 	selected_route_label.text = "Selected Route: %s (Distance %s, Risk %.2f, Supply %d)" % [
 		destination.get("name", route.get("to", "")),
 		str(route.get("distance", 0)),
@@ -89,7 +89,7 @@ func _on_travel_pressed() -> void:
 		status_label.text = str(result.get("message", "Travel failed."))
 		return
 	if result.get("event_triggered", false):
-		var payload := result.get("event_payload", {}).duplicate(true)
+		var payload: Dictionary = (result.get("event_payload", {}) as Dictionary).duplicate(true)
 		payload["arrival_summary"] = result.get("arrival_summary", "")
 		ScreenRouter.show_event_popup(payload)
 	else:
