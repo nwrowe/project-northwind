@@ -7,6 +7,7 @@ var routes_list: Array = []
 var events_list: Array = []
 var upgrades_list: Array = []
 var contracts_list: Array = []
+var rumors_list: Array = []
 
 var goods_by_id: Dictionary = {}
 var ports_by_id: Dictionary = {}
@@ -22,6 +23,7 @@ const ROUTES_PATH := "res://data/routes.json"
 const EVENTS_PATH := "res://data/events.json"
 const UPGRADES_PATH := "res://data/upgrades.json"
 const CONTRACTS_PATH := "res://data/contracts.json"
+const RUMORS_PATH := "res://data/rumors.json"
 
 func load_all_data() -> void:
 	goods_list = JsonLoader.load_json(GOODS_PATH)
@@ -31,6 +33,7 @@ func load_all_data() -> void:
 	events_list = JsonLoader.load_json(EVENTS_PATH)
 	upgrades_list = JsonLoader.load_json(UPGRADES_PATH)
 	contracts_list = JsonLoader.load_json(CONTRACTS_PATH)
+	rumors_list = JsonLoader.load_json(RUMORS_PATH)
 
 	goods_by_id = _index_by_id(goods_list)
 	ports_by_id = _index_by_id(ports_list)
@@ -88,4 +91,11 @@ func get_contracts_for_port(port_id: String) -> Array:
 	for contract in contracts_list:
 		if contract.get("source_port", "") == port_id:
 			results.append(contract)
+	return results
+
+func get_rumors_for_port(port_id: String) -> Array:
+	var results: Array = []
+	for rumor in rumors_list:
+		if str(rumor.get("port_id", "")) == port_id:
+			results.append(rumor)
 	return results

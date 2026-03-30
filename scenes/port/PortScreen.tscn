@@ -89,6 +89,11 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 58)
 text = "Harbormaster"
 
+[node name="TavernButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 58)
+text = "Tavern"
+
 [node name="ShipyardButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 58)
