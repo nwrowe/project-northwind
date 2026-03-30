@@ -27,7 +27,7 @@ layout_mode = 2
 
 [node name="PortNameLabel" type="Label" parent="VBoxContainer/HeaderPanel/VBoxContainer"]
 layout_mode = 2
-text = "Port"
+text = "Port Hub"
 
 [node name="DayMoneyLabel" type="Label" parent="VBoxContainer/HeaderPanel/VBoxContainer"]
 layout_mode = 2
@@ -55,44 +55,64 @@ text = "Supplies"
 layout_mode = 2
 text = "Cargo"
 
-[node name="ActionsPanel" type="PanelContainer" parent="VBoxContainer"]
+[node name="TownPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TownPanel"]
+layout_mode = 2
+
+[node name="LocalFlavorLabel" type="Label" parent="VBoxContainer/TownPanel/VBoxContainer"]
+layout_mode = 2
+text = "Town overview"
+autowrap_mode = 3
+
+[node name="NpcLabel" type="Label" parent="VBoxContainer/TownPanel/VBoxContainer"]
+layout_mode = 2
+text = "NPC flavor"
+autowrap_mode = 3
+
+[node name="ServicePanel" type="PanelContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ActionsPanel"]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/ServicePanel"]
 layout_mode = 2
+columns = 2
 
-[node name="MarketButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="MarketButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Market"
+custom_minimum_size = Vector2(0, 58)
+text = "Market Square"
 
-[node name="TravelButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="ContractsButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Travel"
+custom_minimum_size = Vector2(0, 58)
+text = "Harbormaster"
 
-[node name="ContractsButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="ShipyardButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Contracts"
+custom_minimum_size = Vector2(0, 58)
+text = "Shipyard"
 
-[node name="RepairButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="RepairButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Repair"
+custom_minimum_size = Vector2(0, 58)
+text = "Repair Dock"
 
-[node name="ResupplyButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="ResupplyButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Resupply"
+custom_minimum_size = Vector2(0, 58)
+text = "Chandlery"
 
-[node name="UpgradeButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="UpgradeButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Upgrades"
+custom_minimum_size = Vector2(0, 58)
+text = "Outfitter"
 
-[node name="SaveButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+[node name="TravelButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-text = "Save"
-
-[node name="LoadButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
-layout_mode = 2
-text = "Load"
+custom_minimum_size = Vector2(0, 58)
+text = "Docks / Depart"
 
 [node name="SummaryPanel" type="PanelContainer" parent="VBoxContainer"]
 layout_mode = 2
@@ -103,12 +123,28 @@ layout_mode = 2
 [node name="CargoSummaryLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
 layout_mode = 2
 text = "Cargo: Empty"
+autowrap_mode = 3
 
 [node name="ContractSummaryLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
 layout_mode = 2
-text = "Contracts: 0 available"
+text = "Contracts summary"
+autowrap_mode = 3
 
 [node name="ActionStatusLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
 layout_mode = 2
 text = ""
 autowrap_mode = 3
+
+[node name="FooterPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/FooterPanel"]
+layout_mode = 2
+
+[node name="SaveButton" type="Button" parent="VBoxContainer/FooterPanel/HBoxContainer"]
+layout_mode = 2
+text = "Save"
+
+[node name="LoadButton" type="Button" parent="VBoxContainer/FooterPanel/HBoxContainer"]
+layout_mode = 2
+text = "Load"
