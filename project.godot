@@ -7,6 +7,12 @@ config/name="Project Northwind"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.4")
 
+[autoload]
+GameData="*res://autoload/GameData.gd"
+GameState="*res://autoload/GameState.gd"
+SaveManager="*res://autoload/SaveManager.gd"
+ScreenRouter="*res://autoload/ScreenRouter.gd"
+
 [display]
 window/size/viewport_width=720
 window/size/viewport_height=1280

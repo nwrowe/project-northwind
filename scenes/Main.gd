@@ -8,7 +8,7 @@ func _ready() -> void:
 	ScreenRouter.set_root(screen_root)
 
 	if SaveManager.has_save():
-		var result := SaveManager.load_game()
+		var result: Dictionary = SaveManager.load_game()
 		if not result.get("success", false):
 			GameState.new_game()
 	else:
