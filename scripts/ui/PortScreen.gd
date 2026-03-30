@@ -73,20 +73,7 @@ func _on_contracts_pressed() -> void:
 	ScreenRouter.show_contract_screen()
 
 func _on_repair_pressed() -> void:
-	var port := GameData.get_port(GameState.current_port_id)
-	var missing := GameState.get_effective_max_durability() - GameState.ship_durability
-	if missing <= 0:
-		_set_status("Ship is already fully repaired.")
-		return
-	var modifier := float(port.get("repair_cost_modifier", 1.0))
-	var cost := int(ceil(missing * 1.5 * modifier))
-	if GameState.money >= cost:
-		GameState.money -= cost
-		GameState.ship_durability = GameState.get_effective_max_durability()
-		_set_status("Ship repaired for %d." % cost)
-	else:
-		_set_status("Not enough money to repair.")
-	refresh_ui()
+	ScreenRouter.show_repair_screen()
 
 func _on_resupply_pressed() -> void:
 	var port := GameData.get_port(GameState.current_port_id)
