@@ -25,38 +25,63 @@ func refresh_ui() -> void:
 
 	for good in GameData.goods_list:
 		var good_id: String = str(good.get("id", ""))
-		var row := HBoxContainer.new()
+		var row := VBoxContainer.new()
+		var price := market_system.get_local_price(GameState.current_port_id, good_id)
+		var owned := int(GameState.cargo.get(good_id, 0))
+		var max_buy := market_system.get_max_buy_quantity(good_id)
+
 		var name_label := Label.new()
-		name_label.text = "%s  Buy:%d Sell:%d Owned:%d" % [
+		name_label.text = "%s  Price:%d  Owned:%d  Max buy:%d" % [
 			good.get("name", good_id),
-			market_system.get_local_price(GameState.current_port_id, good_id),
-			market_system.get_local_price(GameState.current_port_id, good_id),
-			int(GameState.cargo.get(good_id, 0))
+			price,
+			owned,
+			max_buy,
 		]
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		var buy_button := Button.new()
-		buy_button.text = "Buy 1"
-		buy_button.pressed.connect(func(): _buy_one(good_id))
-
-		var sell_button := Button.new()
-		sell_button.text = "Sell 1"
-		sell_button.pressed.connect(func(): _sell_one(good_id))
-
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(name_label)
-		row.add_child(buy_button)
-		row.add_child(sell_button)
+
+		var button_row := HBoxContainer.new()
+		button_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(button_row)
+
+		button_row.add_child(_create_action_button("Buy 1", func(): _buy_qty(good_id, 1)))
+		button_row.add_child(_create_action_button("Buy 5", func(): _buy_qty(good_id, 5)))
+		button_row.add_child(_create_action_button("Buy Max", func(): _buy_max(good_id)))
+		button_row.add_child(_create_action_button("Sell 1", func(): _sell_qty(good_id, 1)))
+		button_row.add_child(_create_action_button("Sell 5", func(): _sell_qty(good_id, 5)))
+		button_row.add_child(_create_action_button("Sell All", func(): _sell_all(good_id)))
 		goods_list.add_child(row)
 
-func _buy_one(good_id: String) -> void:
-	var result := market_system.buy(good_id, 1)
-	info_label.text = result.get("message", "")
+func _create_action_button(text: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.text = text
+	button.custom_minimum_size = Vector2(90, 52)
+	button.pressed.connect(callback)
+	return button
+
+func _buy_qty(good_id: String, qty: int) -> void:
+	var result := market_system.buy(good_id, qty)
+	info_label.text = str(result.get("message", ""))
 	refresh_ui()
 
-func _sell_one(good_id: String) -> void:
-	var result := market_system.sell(good_id, 1)
-	info_label.text = result.get("message", "")
+func _buy_max(good_id: String) -> void:
+	var max_buy := market_system.get_max_buy_quantity(good_id)
+	if max_buy <= 0:
+		info_label.text = "Cannot buy more %s." % GameData.get_good(good_id).get("name", good_id)
+		return
+	_buy_qty(good_id, max_buy)
+
+func _sell_qty(good_id: String, qty: int) -> void:
+	var result := market_system.sell(good_id, qty)
+	info_label.text = str(result.get("message", ""))
 	refresh_ui()
+
+func _sell_all(good_id: String) -> void:
+	var owned := int(GameState.cargo.get(good_id, 0))
+	if owned <= 0:
+		info_label.text = "No %s to sell." % GameData.get_good(good_id).get("name", good_id)
+		return
+	_sell_qty(good_id, owned)
 
 func _on_back_pressed() -> void:
 	ScreenRouter.show_port_screen()

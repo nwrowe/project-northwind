@@ -70,6 +70,10 @@ text = "Market"
 layout_mode = 2
 text = "Travel"
 
+[node name="ContractsButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Contracts"
+
 [node name="RepairButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
 layout_mode = 2
 text = "Repair"
