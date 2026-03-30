@@ -74,6 +74,10 @@ text = "Travel"
 layout_mode = 2
 text = "Contracts"
 
+[node name="ShipyardButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Shipyard"
+
 [node name="RepairButton" type="Button" parent="VBoxContainer/ActionsPanel/VBoxContainer"]
 layout_mode = 2
 text = "Repair"
