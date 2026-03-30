@@ -40,6 +40,7 @@ const PORT_FLAVOR := {
 func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
+	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
@@ -104,6 +105,9 @@ func _on_travel_pressed() -> void:
 
 func _on_contracts_pressed() -> void:
 	ScreenRouter.show_contract_screen()
+
+func _on_tavern_pressed() -> void:
+	ScreenRouter.show_tavern_screen()
 
 func _on_shipyard_pressed() -> void:
 	ScreenRouter.show_shipyard_screen()
