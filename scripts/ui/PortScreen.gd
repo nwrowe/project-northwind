@@ -16,6 +16,7 @@ func _ready() -> void:
 	$VBoxContainer/ActionsPanel/VBoxContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
+	$VBoxContainer/ActionsPanel/VBoxContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
 	$VBoxContainer/ActionsPanel/VBoxContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
@@ -71,6 +72,9 @@ func _on_travel_pressed() -> void:
 
 func _on_contracts_pressed() -> void:
 	ScreenRouter.show_contract_screen()
+
+func _on_shipyard_pressed() -> void:
+	ScreenRouter.show_shipyard_screen()
 
 func _on_repair_pressed() -> void:
 	ScreenRouter.show_repair_screen()
