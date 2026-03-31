@@ -3,11 +3,19 @@ extends Control
 var contract_system := ContractSystem.new()
 
 @onready var header_label = $VBoxContainer/HeaderLabel
+@onready var available_scroll = $VBoxContainer/AvailableScroll
 @onready var available_list = $VBoxContainer/AvailableScroll/VBoxContainer/AvailableList
+@onready var active_scroll = $VBoxContainer/ActiveScroll
 @onready var active_list = $VBoxContainer/ActiveScroll/VBoxContainer/ActiveList
 @onready var info_label = $VBoxContainer/FooterPanel/HBoxContainer/InfoLabel
 
 func _ready() -> void:
+	available_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	available_scroll.get_node("VBoxContainer").size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	available_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	active_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	active_scroll.get_node("VBoxContainer").size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	active_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	$VBoxContainer/FooterPanel/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
 	refresh_ui()
 
@@ -60,12 +68,14 @@ func _add_available_contract_row(target_list: VBoxContainer, contract: Dictionar
 	var title := Label.new()
 	title.text = "%s x%d -> %s  Reward:%d" % [good.get("name", good_id), int(contract.get("quantity", 0)), target_port.get("name", target_port_id), int(contract.get("reward", 0))]
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(title)
 	var est_days: int = contract_system.get_minimum_days_for_contract(contract)
 	var actual_days: int = max(int(contract.get("deadline_days", 0)), est_days + 2)
 	var sub := Label.new()
 	sub.text = "Est. sail %d days | Offered deadline %d days | Actual deadline %d days" % [est_days, int(contract.get("deadline_days", 0)), actual_days]
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sub.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(sub)
 	var accept_button := Button.new()
 	accept_button.text = "Accept"
@@ -89,10 +99,12 @@ func _add_active_contract_row(target_list: VBoxContainer, active: Dictionary) ->
 	var title := Label.new()
 	title.text = "%s  Reward:%d" % [str(active.get("summary", contract_id)), reward]
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(title)
 	var status := Label.new()
 	status.text = "Cargo %d/%d | Days left %d | Est. sail %d" % [cargo_have, quantity, days_remaining, int(active.get("estimated_days", 0))]
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(status)
 	if bool(active.get("at_destination", false)):
 		var at_dest := Label.new()
@@ -108,6 +120,7 @@ func _add_active_contract_row(target_list: VBoxContainer, active: Dictionary) ->
 		var hint := Label.new()
 		hint.text = "Need %d more %s to complete." % [quantity - cargo_have, GameData.get_good(good_id).get("name", good_id)]
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info_box.add_child(hint)
 	target_list.add_child(card)
 
