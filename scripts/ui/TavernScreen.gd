@@ -2,6 +2,9 @@ extends Control
 
 var tavern_system := TavernSystem.new()
 var current_rumor_id: String = ""
+var pending_round_action: String = ""
+const RUMOR_ROUND_COST := 4
+const NEW_FACES_COST := 6
 
 @onready var header_label = $VBoxContainer/HeaderLabel
 @onready var intro_label = $VBoxContainer/IntroPanel/VBoxContainer/IntroLabel
@@ -13,11 +16,24 @@ var current_rumor_id: String = ""
 @onready var rumor_text_label = $VBoxContainer/RumorPanel/VBoxContainer/RumorTextLabel
 @onready var recruit_list = $VBoxContainer/RecruitScroll/VBoxContainer/RecruitList
 @onready var info_label = $VBoxContainer/FooterPanel/VBoxContainer/InfoLabel
+@onready var button_row = $VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer
 
 func _ready() -> void:
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/NewRumorButton.pressed.connect(_on_new_rumor_pressed)
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/NewFacesButton.pressed.connect(_on_new_faces_pressed)
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
+	var confirm_button := Button.new()
+	confirm_button.name = "ConfirmRoundButton"
+	confirm_button.text = "Confirm"
+	confirm_button.visible = false
+	confirm_button.pressed.connect(_on_confirm_round_pressed)
+	button_row.add_child(confirm_button)
+	var cancel_button := Button.new()
+	cancel_button.name = "CancelRoundButton"
+	cancel_button.text = "Cancel"
+	cancel_button.visible = false
+	cancel_button.pressed.connect(_on_cancel_round_pressed)
+	button_row.add_child(cancel_button)
 	refresh_ui()
 	_show_new_rumor()
 
@@ -33,42 +49,34 @@ func refresh_ui() -> void:
 func _refresh_recruits() -> void:
 	for child in recruit_list.get_children():
 		child.queue_free()
-
-	var candidates: Array = tavern_system.get_candidates_for_current_port()
-	for candidate in candidates:
+	for candidate in tavern_system.get_candidates_for_current_port():
 		_add_candidate_row(candidate)
 
 func _add_candidate_row(candidate: Dictionary) -> void:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
 	var outer := HBoxContainer.new()
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_child(outer)
-
 	var info_box := VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.add_child(info_box)
-
 	var title := Label.new()
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.text = _candidate_title(candidate)
 	info_box.add_child(title)
-
 	var detail := Label.new()
 	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	detail.text = _candidate_detail(candidate)
 	info_box.add_child(detail)
-
 	var hire_button := Button.new()
 	hire_button.text = "Hire"
 	hire_button.custom_minimum_size = Vector2(120, 52)
 	var candidate_id: String = str(candidate.get("id", ""))
 	hire_button.pressed.connect(func(): _hire_candidate(candidate_id))
 	outer.add_child(hire_button)
-
 	recruit_list.add_child(card)
 
 func _candidate_title(candidate: Dictionary) -> String:
@@ -78,11 +86,7 @@ func _candidate_title(candidate: Dictionary) -> String:
 	return "%s | %s | Cost %d | Trait: %s" % [candidate.get("name", "Officer"), role.capitalize(), int(candidate.get("signing_cost", 0)), candidate.get("trait", "plain")]
 
 func _candidate_detail(candidate: Dictionary) -> String:
-	var stats: Array[String] = [
-		"Sailing %d" % int(candidate.get("sailing", 0)),
-		"Repair %d" % int(candidate.get("repair", 0)),
-		"Fighting %d" % int(candidate.get("fighting", 0)),
-	]
+	var stats: Array[String] = ["Sailing %d" % int(candidate.get("sailing", 0)), "Repair %d" % int(candidate.get("repair", 0)), "Fighting %d" % int(candidate.get("fighting", 0))]
 	if candidate.get("type", "") == "officer":
 		stats.append("Navigation %d" % int(candidate.get("navigation", 0)))
 		stats.append("Leadership %d" % int(candidate.get("leadership", 0)))
@@ -94,7 +98,6 @@ func _show_new_rumor() -> void:
 	speaker_label.text = "Heard from: %s" % rumor.get("speaker", tavern_system.get_tavernkeeper_name())
 	rumor_title_label.text = str(rumor.get("title", "Rumor"))
 	rumor_text_label.text = str(rumor.get("text", ""))
-	info_label.text = "A fresh round loosens another useful story."
 
 func _hire_candidate(candidate_id: String) -> void:
 	var result: Dictionary = tavern_system.hire_candidate(candidate_id)
@@ -102,12 +105,46 @@ func _hire_candidate(candidate_id: String) -> void:
 	refresh_ui()
 
 func _on_new_rumor_pressed() -> void:
-	_show_new_rumor()
+	_request_round("rumor")
 
 func _on_new_faces_pressed() -> void:
-	var result: Dictionary = tavern_system.reroll_candidates_for_current_port()
-	info_label.text = str(result.get("message", ""))
+	_request_round("faces")
+
+func _request_round(action: String) -> void:
+	var cost: int = RUMOR_ROUND_COST if action == "rumor" else NEW_FACES_COST
+	if GameState.money < cost:
+		info_label.text = "Not enough gold to buy a round."
+		return
+	pending_round_action = action
+	info_label.text = "Spend %d gold to buy a round?" % cost
+	button_row.get_node("ConfirmRoundButton").visible = true
+	button_row.get_node("CancelRoundButton").visible = true
+
+func _on_confirm_round_pressed() -> void:
+	if pending_round_action.is_empty():
+		return
+	var cost: int = RUMOR_ROUND_COST if pending_round_action == "rumor" else NEW_FACES_COST
+	if GameState.money < cost:
+		info_label.text = "Not enough gold to buy a round."
+		pending_round_action = ""
+		return
+	GameState.money -= cost
+	if pending_round_action == "rumor":
+		_show_new_rumor()
+		info_label.text = "You buy a round and the room loosens a fresh rumor."
+	else:
+		var result: Dictionary = tavern_system.reroll_candidates_for_current_port()
+		info_label.text = "%s (-%d gold)" % [str(result.get("message", "")), cost]
 	refresh_ui()
+	pending_round_action = ""
+	button_row.get_node("ConfirmRoundButton").visible = false
+	button_row.get_node("CancelRoundButton").visible = false
+
+func _on_cancel_round_pressed() -> void:
+	pending_round_action = ""
+	info_label.text = ""
+	button_row.get_node("ConfirmRoundButton").visible = false
+	button_row.get_node("CancelRoundButton").visible = false
 
 func _on_back_pressed() -> void:
 	ScreenRouter.show_port_screen()
