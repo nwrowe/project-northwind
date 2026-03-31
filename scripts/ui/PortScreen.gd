@@ -30,6 +30,7 @@ func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
+	$VBoxContainer/ServicePanel/GridContainer/OfficeButton.pressed.connect(_on_office_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
@@ -44,7 +45,7 @@ func _ready() -> void:
 
 func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
-	var ship: Dictionary = GameState.get_ship_def()
+	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
 	day_money_label.text = "Day %d | Money %d | Trust %d | Infamy %d" % [GameState.day_count, GameState.money, GameState.trust_rating, GameState.infamy_rating]
@@ -88,6 +89,8 @@ func _on_contracts_pressed() -> void:
 	ScreenRouter.show_contract_screen()
 func _on_tavern_pressed() -> void:
 	ScreenRouter.show_tavern_screen()
+func _on_office_pressed() -> void:
+	ScreenRouter.show_office_screen()
 func _on_shipyard_pressed() -> void:
 	ScreenRouter.show_shipyard_screen()
 func _on_repair_pressed() -> void:
