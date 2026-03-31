@@ -1,6 +1,6 @@
 extends Control
 
-var event_system := EventSystem.new()
+var event_system: EventSystem = EventSystem.new()
 var payload: Dictionary = {}
 
 @onready var event_name_label = $CenterContainer/PanelContainer/VBoxContainer/EventNameLabel

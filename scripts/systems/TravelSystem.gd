@@ -1,8 +1,8 @@
 class_name TravelSystem
 extends RefCounted
 
-var event_system := EventSystem.new()
-var contract_system := ContractSystem.new()
+var event_system: EventSystem = EventSystem.new()
+var contract_system: ContractSystem = ContractSystem.new()
 
 func get_routes_from_current_port() -> Array:
 	return GameData.get_routes_from(GameState.current_port_id)
@@ -18,24 +18,24 @@ func can_travel(route: Dictionary) -> bool:
 	return GameState.supplies >= get_supply_cost(route) and GameState.ship_durability > 0
 
 func travel(route_id: String) -> Dictionary:
-	var route := GameData.get_route(route_id)
+	var route: Dictionary = GameData.get_route(route_id)
 	if route.is_empty():
 		return {"success": false, "message": "Route not found."}
 	if not can_travel(route):
 		return {"success": false, "message": "Not enough supplies or ship cannot travel."}
 
-	var from_port := GameData.get_port(GameState.current_port_id)
-	var supply_cost := get_supply_cost(route)
+	var from_port: Dictionary = GameData.get_port(GameState.current_port_id)
+	var supply_cost: int = get_supply_cost(route)
 	GameState.supplies -= supply_cost
 	GameState.day_count += int(route.get("distance", 1))
 	GameState.current_port_id = route.get("to", GameState.current_port_id)
-	var destination := GameData.get_port(GameState.current_port_id)
+	var destination: Dictionary = GameData.get_port(GameState.current_port_id)
 
-	var event_payload := event_system.roll_event(float(route.get("risk", 0.0)))
-	var triggered := bool(event_payload.get("triggered", false))
-	var contract_result := contract_system.resolve_contracts_on_arrival()
+	var event_payload: Dictionary = event_system.roll_event(float(route.get("risk", 0.0)))
+	var triggered: bool = bool(event_payload.get("triggered", false))
+	var contract_result: Dictionary = contract_system.resolve_contracts_on_arrival()
 
-	var arrival_summary := _build_arrival_summary(
+	var arrival_summary: String = _build_arrival_summary(
 		from_port.get("name", str(route.get("from", ""))),
 		destination.get("name", str(route.get("to", ""))),
 		supply_cost,
@@ -62,7 +62,7 @@ func _build_arrival_summary(from_port_name: String, to_port_name: String, supply
 
 	var completed_messages: Array = contract_result.get("completed_messages", [])
 	var expired_messages: Array = contract_result.get("expired_messages", [])
-	var waiting_count := int(contract_result.get("destination_waiting_count", 0))
+	var waiting_count: int = int(contract_result.get("destination_waiting_count", 0))
 
 	if not completed_messages.is_empty():
 		for msg in completed_messages:

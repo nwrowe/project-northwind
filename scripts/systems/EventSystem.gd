@@ -77,6 +77,7 @@ func _resolve_pirate_choice(payload: Dictionary, choice_id: String) -> Dictionar
 	var trust_delta: int = 0
 	var infamy_delta: int = 0
 	var roll_bonus: int = randi() % 4
+
 	if choice_id == "flee":
 		var flee_score: int = GameState.get_effective_evasion() + GameState.get_effective_navigation_rating()
 		if flee_score + roll_bonus >= pirate_power + 6:
@@ -108,9 +109,10 @@ func _resolve_pirate_choice(payload: Dictionary, choice_id: String) -> Dictionar
 			effects = {"durability_loss": 4 + int(pirate_power / 2), "supply_loss": 0, "money_loss": 6 + pirate_power, "cargo_loss_percent": 0.0}
 			outcome_text = "The bluff fails. The raiders test your resolve and exact a price before retreating."
 			infamy_delta = 1
-		else:
-			effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.05}
-			outcome_text = "You throw cargo and coin overboard to buy safe passage."
+	else:
+		effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.05}
+		outcome_text = "You throw cargo and coin overboard to buy safe passage."
+
 	var adjusted_effects: Dictionary = _adjust_effects_for_officers(effects, "pirates")
 	GameState.apply_event_effects(adjusted_effects)
 	GameState.change_reputation(trust_delta, infamy_delta)
