@@ -18,6 +18,7 @@ var officer_assignments: Dictionary = {}
 var trust_rating: int = 0
 var infamy_rating: int = 0
 var tavern_candidates_by_port: Dictionary = {}
+var market_trade_log: Array = []
 
 func new_game() -> void:
 	current_port_id = "aurelia"
@@ -37,6 +38,7 @@ func new_game() -> void:
 	trust_rating = 0
 	infamy_rating = 0
 	tavern_candidates_by_port = {}
+	market_trade_log = []
 
 func to_dict() -> Dictionary:
 	return {
@@ -56,6 +58,7 @@ func to_dict() -> Dictionary:
 		"trust_rating": trust_rating,
 		"infamy_rating": infamy_rating,
 		"tavern_candidates_by_port": tavern_candidates_by_port,
+		"market_trade_log": market_trade_log,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -76,6 +79,7 @@ func load_from_dict(data: Dictionary) -> void:
 	trust_rating = int(data.get("trust_rating", 0))
 	infamy_rating = int(data.get("infamy_rating", 0))
 	tavern_candidates_by_port = data.get("tavern_candidates_by_port", {})
+	market_trade_log = data.get("market_trade_log", [])
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -86,23 +90,13 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 			if contract.is_empty():
 				continue
 			var deadline_days: int = int(contract.get("deadline_days", 0))
-			normalized.append({
-				"contract_id": contract_id,
-				"accepted_day": day_count,
-				"deadline_day": day_count + deadline_days,
-				"status": "active",
-			})
+			normalized.append({"contract_id": contract_id, "accepted_day": day_count, "deadline_day": day_count + deadline_days, "status": "active"})
 		elif entry is Dictionary:
 			var contract_id_dict: String = str(entry.get("contract_id", ""))
 			if contract_id_dict.is_empty() or GameData.contracts_by_id.get(contract_id_dict, {}).is_empty():
 				continue
 			var fallback_deadline: int = day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0))
-			normalized.append({
-				"contract_id": contract_id_dict,
-				"accepted_day": int(entry.get("accepted_day", day_count)),
-				"deadline_day": int(entry.get("deadline_day", fallback_deadline)),
-				"status": str(entry.get("status", "active")),
-			})
+			normalized.append({"contract_id": contract_id_dict, "accepted_day": int(entry.get("accepted_day", day_count)), "deadline_day": int(entry.get("deadline_day", fallback_deadline)), "status": str(entry.get("status", "active"))})
 	return normalized
 
 func get_ship_def() -> Dictionary:
@@ -125,56 +119,42 @@ func _get_upgrade_bonus_float(key: String) -> float:
 	return bonus
 
 func get_effective_cargo_capacity() -> int:
-	var base_capacity: int = int(get_ship_def().get("cargo_capacity", 0))
-	return max(0, base_capacity + _get_upgrade_bonus_int("cargo_capacity_bonus"))
+	return max(0, int(get_ship_def().get("cargo_capacity", 0)) + _get_upgrade_bonus_int("cargo_capacity_bonus"))
 
 func get_effective_max_durability() -> int:
-	var base_durability: int = int(get_ship_def().get("max_durability", 0))
-	return max(1, base_durability + _get_upgrade_bonus_int("max_durability_bonus"))
+	return max(1, int(get_ship_def().get("max_durability", 0)) + _get_upgrade_bonus_int("max_durability_bonus"))
 
 func get_effective_supply_efficiency() -> float:
-	var base_eff: float = float(get_ship_def().get("supply_efficiency", 1.0))
-	return max(0.1, base_eff + _get_upgrade_bonus_float("supply_efficiency_bonus"))
+	return max(0.1, float(get_ship_def().get("supply_efficiency", 1.0)) + _get_upgrade_bonus_float("supply_efficiency_bonus"))
 
 func get_effective_speed() -> float:
-	var base_speed: float = float(get_ship_def().get("speed", 1.0))
-	return max(0.1, base_speed + _get_upgrade_bonus_float("speed_bonus"))
+	return max(0.1, float(get_ship_def().get("speed", 1.0)) + _get_upgrade_bonus_float("speed_bonus"))
 
 func get_effective_firepower() -> int:
-	var base_value: int = int(get_ship_def().get("firepower", 0))
-	return max(0, base_value + _get_upgrade_bonus_int("firepower_bonus"))
+	return max(0, int(get_ship_def().get("firepower", 0)) + _get_upgrade_bonus_int("firepower_bonus"))
 
 func get_effective_hull_armor() -> int:
-	var base_value: int = int(get_ship_def().get("hull_armor", 0))
-	return max(0, base_value + _get_upgrade_bonus_int("hull_armor_bonus"))
+	return max(0, int(get_ship_def().get("hull_armor", 0)) + _get_upgrade_bonus_int("hull_armor_bonus"))
 
 func get_effective_evasion() -> int:
-	var base_value: int = int(get_ship_def().get("evasion", 0))
-	return max(0, base_value + _get_upgrade_bonus_int("evasion_bonus"))
+	return max(0, int(get_ship_def().get("evasion", 0)) + _get_upgrade_bonus_int("evasion_bonus"))
 
 func get_effective_intimidation() -> int:
-	var base_value: int = int(get_ship_def().get("intimidation", 0))
-	return max(0, base_value + _get_upgrade_bonus_int("intimidation_bonus"))
+	return max(0, int(get_ship_def().get("intimidation", 0)) + _get_upgrade_bonus_int("intimidation_bonus"))
 
 func get_effective_crew_capacity() -> int:
-	var base_value: int = int(get_ship_def().get("crew_capacity", 0))
-	return max(1, base_value + _get_upgrade_bonus_int("crew_capacity_bonus"))
+	return max(1, int(get_ship_def().get("crew_capacity", 0)) + _get_upgrade_bonus_int("crew_capacity_bonus"))
 
 func get_effective_officer_slots() -> int:
-	var base_value: int = int(get_ship_def().get("officer_slots", 0))
-	return max(1, base_value + _get_upgrade_bonus_int("officer_slots_bonus"))
+	return max(1, int(get_ship_def().get("officer_slots", 0)) + _get_upgrade_bonus_int("officer_slots_bonus"))
 
 func get_effective_boarding_strength() -> int:
-	var base_value: int = int(get_ship_def().get("boarding_strength", 0))
-	return max(0, base_value + _get_upgrade_bonus_int("boarding_strength_bonus"))
+	return max(0, int(get_ship_def().get("boarding_strength", 0)) + _get_upgrade_bonus_int("boarding_strength_bonus"))
 
 func get_current_cargo_used() -> int:
 	var total: int = 0
 	for good_id in cargo.keys():
-		var qty: int = int(cargo[good_id])
-		var good: Dictionary = GameData.get_good(str(good_id))
-		var cargo_size: int = int(good.get("cargo_size", 1))
-		total += qty * cargo_size
+		total += int(cargo[good_id]) * int(GameData.get_good(str(good_id)).get("cargo_size", 1))
 	return total
 
 func get_active_officer_count() -> int:
@@ -215,6 +195,18 @@ func add_cargo(good_id: String, qty: int) -> void:
 	if int(cargo[good_id]) <= 0:
 		cargo.erase(good_id)
 
+func add_market_log_entry(entry: Dictionary) -> void:
+	market_trade_log.append(entry)
+	if market_trade_log.size() > 60:
+		market_trade_log = market_trade_log.slice(market_trade_log.size() - 60, market_trade_log.size())
+
+func get_market_entries_for_good(good_id: String) -> Array:
+	var matches: Array = []
+	for entry in market_trade_log:
+		if str(entry.get("good_id", "")) == good_id:
+			matches.append(entry)
+	return matches
+
 func change_reputation(trust_delta: int, infamy_delta: int) -> void:
 	trust_rating += trust_delta
 	infamy_rating += infamy_delta
@@ -223,7 +215,6 @@ func apply_event_effects(effects: Dictionary) -> void:
 	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
 	supplies -= int(effects.get("supply_loss", 0))
 	money -= int(effects.get("money_loss", 0))
-
 	var cargo_loss_percent: float = float(effects.get("cargo_loss_percent", 0.0))
 	if cargo_loss_percent > 0.0:
 		for good_id in cargo.keys().duplicate():
@@ -233,6 +224,5 @@ func apply_event_effects(effects: Dictionary) -> void:
 			cargo[good_id_str] = max(0, qty - lost)
 			if int(cargo[good_id_str]) == 0:
 				cargo.erase(good_id_str)
-
 	supplies = max(0, supplies)
 	money = max(0, money)
