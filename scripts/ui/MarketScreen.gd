@@ -32,10 +32,12 @@ func refresh_ui() -> void:
 		var info_box := VBoxContainer.new()
 		info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		outer.add_child(info_box)
+		var buy_price: int = market_system.get_buy_price(GameState.current_port_id, good_id)
+		var sell_price: int = market_system.get_sell_price(GameState.current_port_id, good_id)
 		var name_label := Label.new()
 		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_label.text = "%s  Price:%d  Owned:%d  Max buy:%d" % [good.get("name", good_id), market_system.get_local_price(GameState.current_port_id, good_id), int(GameState.cargo.get(good_id, 0)), market_system.get_max_buy_quantity(good_id)]
+		name_label.text = "%s  Buy:%d  Sell:%d  Owned:%d  Max buy:%d" % [good.get("name", good_id), buy_price, sell_price, int(GameState.cargo.get(good_id, 0)), market_system.get_max_buy_quantity(good_id)]
 		info_box.add_child(name_label)
 		var hint_label := Label.new()
 		hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

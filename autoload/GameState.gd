@@ -98,13 +98,19 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 			if contract.is_empty():
 				continue
 			var deadline_days: int = int(contract.get("deadline_days", 0))
-			normalized.append({"contract_id": contract_id, "accepted_day": day_count, "deadline_day": day_count + deadline_days, "status": "active"})
+			normalized.append({"contract_id": contract_id, "accepted_day": day_count, "deadline_day": day_count + deadline_days, "status": "active", "delivery_bonus": 0})
 		elif entry is Dictionary:
 			var contract_id_dict: String = str(entry.get("contract_id", ""))
 			if contract_id_dict.is_empty() or GameData.contracts_by_id.get(contract_id_dict, {}).is_empty():
 				continue
 			var fallback_deadline: int = day_count + int(GameData.contracts_by_id[contract_id_dict].get("deadline_days", 0))
-			normalized.append({"contract_id": contract_id_dict, "accepted_day": int(entry.get("accepted_day", day_count)), "deadline_day": int(entry.get("deadline_day", fallback_deadline)), "status": str(entry.get("status", "active"))})
+			normalized.append({
+				"contract_id": contract_id_dict,
+				"accepted_day": int(entry.get("accepted_day", day_count)),
+				"deadline_day": int(entry.get("deadline_day", fallback_deadline)),
+				"status": str(entry.get("status", "active")),
+				"delivery_bonus": int(entry.get("delivery_bonus", 0)),
+			})
 	return normalized
 
 func get_ship_def() -> Dictionary:
@@ -187,6 +193,12 @@ func add_cargo(good_id: String, qty: int) -> void:
 		cargo.erase(good_id)
 
 func add_market_log_entry(entry: Dictionary) -> void:
+	for i in range(market_trade_log.size() - 1, -1, -1):
+		var existing: Dictionary = market_trade_log[i]
+		if int(existing.get("day", -1)) == int(entry.get("day", -2)) and str(existing.get("type", "")) == str(entry.get("type", "")) and str(existing.get("port_id", "")) == str(entry.get("port_id", "")) and str(existing.get("good_id", "")) == str(entry.get("good_id", "")) and int(existing.get("price", -1)) == int(entry.get("price", -2)):
+			existing["quantity"] = int(existing.get("quantity", 0)) + int(entry.get("quantity", 0))
+			market_trade_log[i] = existing
+			return
 	market_trade_log.append(entry)
 	if market_trade_log.size() > 60:
 		market_trade_log = market_trade_log.slice(market_trade_log.size() - 60, market_trade_log.size())

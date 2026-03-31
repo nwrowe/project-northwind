@@ -65,13 +65,21 @@ func _add_available_contract_row(target_list: VBoxContainer, contract: Dictionar
 	var target_port_id: String = str(contract.get("target_port", ""))
 	var good := GameData.get_good(good_id)
 	var target_port := GameData.get_port(target_port_id)
+	var est_days: int = contract_system.get_minimum_days_for_contract(contract)
+	var actual_days: int = max(int(contract.get("deadline_days", 0)), est_days + 2)
+	var source_buy_total: int = contract_system.market_system.get_buy_price(str(contract.get("source_port", "")), good_id) * int(contract.get("quantity", 0))
+	var destination_sell_total: int = contract_system.market_system.get_sell_price(target_port_id, good_id) * int(contract.get("quantity", 0))
+	var bonus: int = contract_system._compute_delivery_bonus(contract, est_days)
 	var title := Label.new()
-	title.text = "%s x%d -> %s  Reward:%d" % [good.get("name", good_id), int(contract.get("quantity", 0)), target_port.get("name", target_port_id), int(contract.get("reward", 0))]
+	title.text = "%s x%d -> %s" % [good.get("name", good_id), int(contract.get("quantity", 0)), target_port.get("name", target_port_id)]
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(title)
-	var est_days: int = contract_system.get_minimum_days_for_contract(contract)
-	var actual_days: int = max(int(contract.get("deadline_days", 0)), est_days + 2)
+	var econ := Label.new()
+	econ.text = "Buy est. %d | Sell there %d | Bonus %d | Total payout %d" % [source_buy_total, destination_sell_total, bonus, destination_sell_total + bonus]
+	econ.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	econ.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_box.add_child(econ)
 	var sub := Label.new()
 	sub.text = "Est. sail %d days | Offered deadline %d days | Actual deadline %d days" % [est_days, int(contract.get("deadline_days", 0)), actual_days]
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -93,14 +101,18 @@ func _add_active_contract_row(target_list: VBoxContainer, active: Dictionary) ->
 	var contract_id: String = str(active.get("contract_id", ""))
 	var good_id: String = str(contract.get("good_id", ""))
 	var quantity := int(contract.get("quantity", 0))
-	var reward := int(contract.get("reward", 0))
 	var cargo_have := int(active.get("cargo_have", 0))
 	var days_remaining := int(active.get("days_remaining", 0))
 	var title := Label.new()
-	title.text = "%s  Reward:%d" % [str(active.get("summary", contract_id)), reward]
+	title.text = str(active.get("summary", contract_id))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	info_box.add_child(title)
+	var payout := Label.new()
+	payout.text = "Sell value %d | Bonus %d | Total payout %d" % [int(active.get("destination_sell_total", 0)), int(active.get("delivery_bonus", 0)), int(active.get("total_payout", 0))]
+	payout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	payout.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_box.add_child(payout)
 	var status := Label.new()
 	status.text = "Cargo %d/%d | Days left %d | Est. sail %d" % [cargo_have, quantity, days_remaining, int(active.get("estimated_days", 0))]
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -112,13 +124,13 @@ func _add_active_contract_row(target_list: VBoxContainer, active: Dictionary) ->
 		info_box.add_child(at_dest)
 	if bool(active.get("is_completable", false)):
 		var complete_button := Button.new()
-		complete_button.text = "Complete (+%d)" % reward
-		complete_button.custom_minimum_size = Vector2(140, 52)
+		complete_button.text = "Fulfill (%d)" % int(active.get("total_payout", 0))
+		complete_button.custom_minimum_size = Vector2(160, 52)
 		complete_button.pressed.connect(func(): _complete_contract(contract_id))
 		outer.add_child(complete_button)
 	elif bool(active.get("at_destination", false)) and cargo_have < quantity:
 		var hint := Label.new()
-		hint.text = "Need %d more %s to complete." % [quantity - cargo_have, GameData.get_good(good_id).get("name", good_id)]
+		hint.text = "Need %d more %s to fulfill." % [quantity - cargo_have, GameData.get_good(good_id).get("name", good_id)]
 		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		info_box.add_child(hint)

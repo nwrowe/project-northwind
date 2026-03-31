@@ -1,6 +1,8 @@
 class_name ContractSystem
 extends RefCounted
 
+var market_system := MarketSystem.new()
+
 func get_available_contracts_for_current_port() -> Array:
 	var results: Array = []
 	for contract in GameData.get_contracts_for_port(GameState.current_port_id):
@@ -22,8 +24,15 @@ func accept_contract(contract_id: String) -> Dictionary:
 	var minimum_days: int = get_minimum_days_for_contract(contract)
 	var requested_days: int = int(contract.get("deadline_days", 0))
 	var actual_days: int = max(requested_days, minimum_days + 2)
-	GameState.active_contracts.append({"contract_id": contract_id, "accepted_day": GameState.day_count, "deadline_day": GameState.day_count + actual_days, "status": "active"})
-	return {"success": true, "message": "Accepted contract. Deliver within %d days (est. sail %d)." % [actual_days, minimum_days]}
+	var delivery_bonus: int = _compute_delivery_bonus(contract, minimum_days)
+	GameState.active_contracts.append({
+		"contract_id": contract_id,
+		"accepted_day": GameState.day_count,
+		"deadline_day": GameState.day_count + actual_days,
+		"status": "active",
+		"delivery_bonus": delivery_bonus,
+	})
+	return {"success": true, "message": "Accepted contract. Deliver within %d days (est. sail %d). Delivery bonus: %d." % [actual_days, minimum_days, delivery_bonus]}
 
 func get_active_contracts() -> Array:
 	var results: Array = []
@@ -55,18 +64,19 @@ func complete_contract(contract_id: String) -> Dictionary:
 	var contract: Dictionary = view.get("contract", {})
 	var good_id: String = str(contract.get("good_id", ""))
 	var quantity: int = int(contract.get("quantity", 0))
-	var reward: int = int(contract.get("reward", 0))
+	var sell_value: int = int(view.get("destination_sell_total", 0))
+	var delivery_bonus: int = int(view.get("delivery_bonus", 0))
+	var payout_total: int = sell_value + delivery_bonus
 	GameState.add_cargo(good_id, -quantity)
-	GameState.money += reward
+	GameState.money += payout_total
 	GameState.active_contracts.remove_at(active_index)
 	if not contract_id in GameState.completed_contract_ids:
 		GameState.completed_contract_ids.append(contract_id)
-	return {"success": true, "message": "Contract complete! +%d coins for delivering %d %s." % [reward, quantity, GameData.get_good(good_id).get("name", good_id)], "reward": reward, "contract_id": contract_id}
+	return {"success": true, "message": "Contract fulfilled! Sold for %d and received %d bonus. Total %d." % [sell_value, delivery_bonus, payout_total], "reward": payout_total, "contract_id": contract_id}
 
 func resolve_contracts_on_arrival() -> Dictionary:
-	var completed_messages: Array[String] = []
 	var expired_messages: Array[String] = []
-	var completable_count: int = 0
+	var waiting_count: int = 0
 	var contract_ids: Array[String] = []
 	for entry in GameState.active_contracts:
 		if entry is Dictionary:
@@ -78,13 +88,9 @@ func resolve_contracts_on_arrival() -> Dictionary:
 		if bool(view.get("is_expired", false)):
 			_expire_contract(contract_id)
 			expired_messages.append("Expired: %s" % view.get("summary", contract_id))
-		elif bool(view.get("is_completable", false)):
-			var result: Dictionary = complete_contract(contract_id)
-			if bool(result.get("success", false)):
-				completed_messages.append(str(result.get("message", "Contract completed.")))
 		elif bool(view.get("at_destination", false)):
-			completable_count += 1
-	return {"completed_messages": completed_messages, "expired_messages": expired_messages, "destination_waiting_count": completable_count}
+			waiting_count += 1
+	return {"completed_messages": [], "expired_messages": expired_messages, "destination_waiting_count": waiting_count}
 
 func _get_contract_view(contract_id: String) -> Dictionary:
 	var index: int = _find_active_index(contract_id)
@@ -103,13 +109,18 @@ func _get_contract_view_for_index(index: int) -> Dictionary:
 
 func _build_contract_view(entry: Dictionary, contract: Dictionary) -> Dictionary:
 	var good_id: String = str(contract.get("good_id", ""))
+	var source_port_id: String = str(contract.get("source_port", ""))
+	var target_port_id: String = str(contract.get("target_port", ""))
 	var quantity: int = int(contract.get("quantity", 0))
 	var deadline_day: int = int(entry.get("deadline_day", GameState.day_count))
 	var cargo_have: int = int(GameState.cargo.get(good_id, 0))
-	var at_destination: bool = str(contract.get("target_port", "")) == GameState.current_port_id
-	var target_port: Dictionary = GameData.get_port(str(contract.get("target_port", "")))
-	var source_port: String = str(contract.get("source_port", ""))
+	var at_destination: bool = target_port_id == GameState.current_port_id
+	var target_port: Dictionary = GameData.get_port(target_port_id)
+	var source_port: Dictionary = GameData.get_port(source_port_id)
 	var estimated_days: int = get_minimum_days_for_contract(contract)
+	var source_buy_total: int = market_system.get_buy_price(source_port_id, good_id) * quantity
+	var destination_sell_total: int = market_system.get_sell_price(target_port_id, good_id) * quantity
+	var delivery_bonus: int = int(entry.get("delivery_bonus", _compute_delivery_bonus(contract, estimated_days)))
 	return {
 		"contract_id": str(entry.get("contract_id", "")),
 		"contract": contract,
@@ -121,9 +132,24 @@ func _build_contract_view(entry: Dictionary, contract: Dictionary) -> Dictionary
 		"is_expired": GameState.day_count > deadline_day,
 		"is_completable": at_destination and GameState.day_count <= deadline_day and cargo_have >= quantity,
 		"estimated_days": estimated_days,
-		"summary": "%s x%d -> %s" % [GameData.get_good(good_id).get("name", good_id), quantity, target_port.get("name", str(contract.get("target_port", "")))],
-		"source_port_name": GameData.get_port(source_port).get("name", source_port)
+		"delivery_bonus": delivery_bonus,
+		"source_buy_total": source_buy_total,
+		"destination_sell_total": destination_sell_total,
+		"total_payout": destination_sell_total + delivery_bonus,
+		"summary": "%s x%d -> %s" % [GameData.get_good(good_id).get("name", good_id), quantity, target_port.get("name", target_port_id)],
+		"source_port_name": source_port.get("name", source_port_id)
 	}
+
+func _compute_delivery_bonus(contract: Dictionary, estimated_days: int) -> int:
+	var good_id: String = str(contract.get("good_id", ""))
+	var quantity: int = int(contract.get("quantity", 0))
+	var source_port_id: String = str(contract.get("source_port", ""))
+	var target_port_id: String = str(contract.get("target_port", ""))
+	var source_buy_total: int = market_system.get_buy_price(source_port_id, good_id) * quantity
+	var destination_sell_total: int = market_system.get_sell_price(target_port_id, good_id) * quantity
+	var desired_profit: int = max(int(ceil(source_buy_total * 0.25)), 12 + estimated_days * 6 + quantity * 2)
+	var minimum_bonus: int = source_buy_total + desired_profit - destination_sell_total
+	return max(int(contract.get("reward", 0)), minimum_bonus)
 
 func _estimate_route_days(start_port_id: String, target_port_id: String) -> int:
 	if start_port_id == target_port_id:
