@@ -180,6 +180,27 @@ func get_current_cargo_used() -> int:
 func get_active_officer_count() -> int:
 	return officer_assignments.size()
 
+func get_officer(role: String) -> Dictionary:
+	return officer_assignments.get(role, {})
+
+func get_role_stat(role: String, stat_name: String) -> int:
+	var officer: Dictionary = get_officer(role)
+	if officer.is_empty():
+		return 0
+	return int(officer.get(stat_name, 0))
+
+func get_effective_navigation_rating() -> int:
+	return get_role_stat("navigator", "navigation") + get_role_stat("captain", "leadership") + int(round(get_effective_speed() * 2.0))
+
+func get_effective_repair_rating() -> int:
+	return get_role_stat("carpenter", "repair") + get_role_stat("captain", "leadership")
+
+func get_effective_gunnery_rating() -> int:
+	return get_role_stat("gunner", "fighting") + get_role_stat("captain", "leadership")
+
+func get_effective_command_rating() -> int:
+	return get_role_stat("captain", "leadership") + get_role_stat("captain", "sailing")
+
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrade_id in owned_upgrades
 
