@@ -92,7 +92,7 @@ size_flags_vertical = 3
 
 [node name="GridContainer" type="GridContainer" parent="VBoxContainer/ServicePanel"]
 layout_mode = 2
-columns = 2
+columns = 3
 
 [node name="MarketButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
@@ -108,6 +108,11 @@ text = "Harbormaster"
 layout_mode = 2
 custom_minimum_size = Vector2(0, 58)
 text = "Tavern"
+
+[node name="OfficeButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 58)
+text = "Harbor Office"
 
 [node name="ShipyardButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
