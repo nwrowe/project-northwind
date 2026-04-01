@@ -117,6 +117,34 @@ func load_game(slot_id: String = "") -> Dictionary:
 		"display_name": display_name,
 	}
 
+func delete_game(slot_id: String) -> Dictionary:
+	_migrate_legacy_save_if_needed()
+
+	if slot_id.is_empty():
+		return {"success": false, "message": "No save slot selected."}
+
+	var filename := "%s.json" % slot_id
+	var dir := DirAccess.open(SAVE_DIR)
+	if dir == null:
+		return {"success": false, "message": "Could not access save directory."}
+
+	if not dir.file_exists(filename):
+		return {"success": false, "message": "That slot is already empty."}
+
+	var slot_info := _get_slot_info(slot_id)
+	var display_name := str(slot_info.get("display_name", get_slot_label(slot_id)))
+
+	var error := dir.remove(filename)
+	if error != OK:
+		return {"success": false, "message": "Could not delete save file."}
+
+	return {
+		"success": true,
+		"message": "Deleted %s." % display_name,
+		"slot_id": slot_id,
+		"display_name": display_name,
+	}
+
 func load_latest_game() -> Dictionary:
 	var latest_slot := get_latest_slot()
 	if latest_slot.is_empty():
@@ -184,11 +212,9 @@ func _read_slot_file(slot_id: String) -> Dictionary:
 
 	var data: Dictionary = parsed
 
-	# Wrapped slot format.
 	if data.has("state") and data.get("state") is Dictionary:
 		return data
 
-	# Legacy/raw dict fallback.
 	return {
 		"meta": _build_metadata(slot_id, get_slot_label(slot_id), data),
 		"state": data,

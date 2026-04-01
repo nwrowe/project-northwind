@@ -5,7 +5,7 @@ var climate_system := ClimateSystem.new()
 
 const SAVE_SLOT_DIALOG_SCENE := preload("res://scenes/ui/SaveSlotDialog.tscn")
 
-const PORT_FLAVOR := {
+const PORT_FLAVOR = {
 	"aurelia": {"overview": "Aurelia is a calm starter harbor where traders swap staples and gossip under sun-faded awnings.", "npc": "Maris the Dock Clerk keeps ledgers on every captain and always knows which routes are safest this week."},
 	"varenna": {"overview": "Varenna is a cloth-heavy commercial stop with tight lanes, fast deals, and merchants who watch every coin.", "npc": "Ida the Factor brokers textile contracts and quietly tips regular captains about shortages inland."},
 	"cyr_port": {"overview": "Cyr Port feels hotter, louder, and richer, with spice traffic and higher-risk ships crowding the quay.", "npc": "Captain Sorell retired here and now trades route rumors for stories and a respectable fee."},
@@ -15,46 +15,45 @@ const PORT_FLAVOR := {
 
 var save_slot_dialog
 
-@onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
-@onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
-@onready var ship_label = $VBoxContainer/StatusPanel/VBoxContainer/ShipLabel
+@onready var port_name_label = $VZoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
+@onready var day_money_label = $VVoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
+@onready var ship_label = $VVoxContainer/StatusPanel/VBoxContainer/ShipLabel
 @onready var durability_label = $VBoxContainer/StatusPanel/VBoxContainer/DurabilityLabel
 @onready var supplies_label = $VBoxContainer/StatusPanel/VBoxContainer/SuppliesLabel
-@onready var cargo_label = $VBoxContainer/StatusPanel/VBoxContainer/CargoLabel
+@onready var cargo_label = $VVoxContainer/StatusPanel/VBoxContainer/CargoLabel
 @onready var local_flavor_label = $VBoxContainer/TownPanel/VBoxContainer/LocalFlavorLabel
 @onready var npc_label = $VBoxContainer/TownPanel/VBoxContainer/NpcLabel
-@onready var climate_label = $VBoxContainer/TownPanel/VBoxContainer/ClimateLabel
-@onready var gathering_label = $VBoxContainer/TownPanel/VBoxContainer/GatheringLabel
-@onready var refining_label = $VBoxContainer/TownPanel/VBoxContainer/RefiningLabel
-@onready var cargo_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
-@onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
+@onready var climate_label = $VZoxContainer/TownPanel/VBoxContainer/ClimateLabel
+@onready var gathering_label = $VVoxContainer/TownPanel/VBoxContainer/GatheringLabel
+@onready var refining_label = $VVoxContainer/TownPanel/VBoxContainer/RefiningLabel
+@onready var cargo_summary_label = $VZoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
+@onready var contract_summary_label = $VVoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
+	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_taverr_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/OfficeButton.pressed.connect(_on_office_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
+	$VVoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
-	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
+	$VVoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
-
-	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
+		save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
 	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
 	save_slot_dialog.load_requested.connect(_on_load_slot_requested)
+	save_slot_dialog.delete_requested.connect(_on_delete_slot_requested)
 	refresh_ui()
-
-	if not GameState.pending_status_message.is_empty():
-		action_status_label.text = GameState.pending_status_message
-		GameState.pending_status_message = ""
+		if not GameState.pending_status_message.is_empty():
+			action_status_label.text = GameState.pending_status_message
+			GameState.pending_status_message = ""
 
 func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
@@ -65,7 +64,7 @@ func refresh_ui() -> void:
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
 	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d | Wages due %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion(), GameState.get_crew_wages_due() + GameState.get_officer_wages_due()]
-	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
+	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkpeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
 	local_flavor_label.text = str(flavor.get("overview", ""))
 	npc_label.text = str(flavor.get("npc", ""))
 	climate_label.text = "Climate: %s" % climate_system.get_climate_name_for_current_port()
@@ -95,27 +94,27 @@ func _build_contract_summary() -> String:
 	return "Harbormaster: %d contracts available | %d active | %d ready now | Trip costs %d%s" % [available, active.size(), completable, GameState.get_total_upkeep_due(), urgency]
 
 func _on_market_pressed() -> void:
-	ScreenRouter.show_market_screen()
+\tScreenRouter.show_market_screen()
 func _on_travel_pressed() -> void:
-	ScreenRouter.show_travel_screen()
+\tScreenRouter.show_travel_screen()
 func _on_contracts_pressed() -> void:
-	ScreenRouter.show_contract_screen()
+\tScreenRouter.show_contract_screen()
 func _on_tavern_pressed() -> void:
-	ScreenRouter.show_tavern_screen()
+\tScreenRouter.show_tavern_screen()
 func _on_office_pressed() -> void:
-	ScreenRouter.show_office_screen()
+\tScreenRouter.show_office_screen()
 func _on_shipyard_pressed() -> void:
-	ScreenRouter.show_shipyard_screen()
+\tScreenRouter.show_shipyard_screen()
 func _on_repair_pressed() -> void:
-	ScreenRouter.show_repair_screen()
+\tScreenRouter.show_repair_screen()
 func _on_resupply_pressed() -> void:
-	ScreenRouter.show_chandlery_screen()
+\tScreenRouter.show_chandlery_screen()
 func _on_upgrade_pressed() -> void:
-	ScreenRouter.show_upgrade_panel()
+\tScreenRouter.show_upgrade_panel()
 func _on_save_pressed() -> void:
-	save_slot_dialog.open_for_save()
+\tsave_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:
-	save_slot_dialog.open_for_load()
+\tsave_slot_dialog.open_for_load()
 
 func _on_save_slot_requested(slot_id: String, display_name: String) -> void:
 	var result: Dictionary = SaveManager.save_game(slot_id, display_name)
@@ -130,9 +129,15 @@ func _on_load_slot_requested(slot_id: String) -> void:
 	if result.get("success", false):
 		refresh_ui()
 
+func _on_delete_slot_requested(slot_id: String) -> void:
+	var result: Dictionary = SaveManager.delete_game(slot_id)
+	action_status_label.text = str(result.get("message", "Delete complete."))
+	if result.get("success", false):
+		save_slot_dialog.refresh_slots()
+
 func _on_new_game_pressed() -> void:
-	new_game_confirm_dialog.popup_centered()
+\tnew_game_confirm_dialog.popup_centered()
 
 func _on_new_game_confirmed() -> void:
-	GameState.new_game()
-	ScreenRouter.show_opening_scene()
+\tGameState.new_game()
+\tScreenRouter.show_opening_scene()
