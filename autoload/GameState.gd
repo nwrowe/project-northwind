@@ -21,6 +21,7 @@ var tavern_candidates_by_port: Dictionary = {}
 var market_trade_log: Array = []
 var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
+var morale: int = 70
 
 func new_game() -> void:
 	current_port_id = "aurelia"
@@ -43,6 +44,7 @@ func new_game() -> void:
 	market_trade_log = []
 	office_member = false
 	office_storage_by_port = {}
+	morale = 70
 
 func to_dict() -> Dictionary:
 	return {
@@ -65,6 +67,7 @@ func to_dict() -> Dictionary:
 		"market_trade_log": market_trade_log,
 		"office_member": office_member,
 		"office_storage_by_port": office_storage_by_port,
+		"morale": morale,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -88,6 +91,7 @@ func load_from_dict(data: Dictionary) -> void:
 	market_trade_log = data.get("market_trade_log", [])
 	office_member = bool(data.get("office_member", false))
 	office_storage_by_port = data.get("office_storage_by_port", {})
+	morale = int(data.get("morale", 70))
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -170,6 +174,8 @@ func get_role_stat(role: String, stat_name: String) -> int:
 	if officer.is_empty():
 		return 0
 	return int(officer.get(stat_name, 0))
+func get_morale_bonus() -> int:
+	return clamp(int(floor(float(morale - 50) / 10.0)), -4, 5)
 func get_effective_navigation_rating() -> int:
 	return get_role_stat("navigator", "navigation") + get_role_stat("captain", "leadership") + int(round(get_effective_speed() * 2.0))
 func get_effective_repair_rating() -> int:
@@ -179,7 +185,7 @@ func get_effective_gunnery_rating() -> int:
 func get_effective_command_rating() -> int:
 	return get_role_stat("captain", "leadership") + get_role_stat("captain", "sailing")
 func get_crew_discipline() -> int:
-	return get_effective_command_rating() + int(ceil(float(crew_count) / 3.0))
+	return get_effective_command_rating() + int(ceil(float(crew_count) / 3.0)) + get_morale_bonus()
 func get_travel_supply_discount() -> float:
 	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01
 	return min(0.30, discount)
@@ -190,12 +196,48 @@ func get_contract_bonus_multiplier() -> float:
 	var bonus: float = 1.0 + float(get_role_stat("captain", "leadership")) * 0.04 + float(max(0, trust_rating)) * 0.005
 	return min(1.35, bonus)
 func get_passive_intimidation_bonus() -> int:
-	return int(floor(float(get_role_stat("gunner", "fighting") + get_role_stat("captain", "leadership")) / 2.0))
+	return int(floor(float(get_role_stat("gunner", "fighting") + get_role_stat("captain", "leadership")) / 2.0)) + max(0, get_morale_bonus())
+
+func get_crew_wages_due() -> int:
+	return max(0, crew_count)
+func get_officer_wages_due() -> int:
+	return get_active_officer_count() * 4
+func get_ship_upkeep_due() -> int:
+	var ship: Dictionary = get_ship_def()
+	return max(2, int(ship.get("firepower", 0)) / 3 + int(ship.get("hull_armor", 0)) / 3 + int(ship.get("cargo_capacity", 0)) / 20)
+func get_total_upkeep_due() -> int:
+	return get_crew_wages_due() + get_officer_wages_due() + get_ship_upkeep_due()
+func change_morale(delta: int) -> void:
+	morale = clamp(morale + delta, 0, 100)
+func process_trip_costs() -> Dictionary:
+	var crew_wages: int = get_crew_wages_due()
+	var officer_wages: int = get_officer_wages_due()
+	var upkeep: int = get_ship_upkeep_due()
+	var total_due: int = crew_wages + officer_wages + upkeep
+	var paid: int = min(money, total_due)
+	money -= paid
+	var unpaid: int = total_due - paid
+	var morale_change: int = 1
+	if unpaid > 0:
+		morale_change = -min(20, 5 + unpaid / 2 - int(get_effective_command_rating() / 3))
+	change_morale(morale_change)
+	return {
+		"crew_wages": crew_wages,
+		"officer_wages": officer_wages,
+		"ship_upkeep": upkeep,
+		"total_due": total_due,
+		"paid": paid,
+		"unpaid": unpaid,
+		"morale_change": morale_change,
+	}
+func recover_morale_in_port(amount: int) -> void:
+	change_morale(amount)
 func apply_crew_loss(loss: int) -> int:
 	if loss <= 0:
 		return 0
 	var previous: int = crew_count
 	crew_count = max(1, crew_count - loss)
+	change_morale(-loss * 2)
 	return previous - crew_count
 
 func has_upgrade(upgrade_id: String) -> bool:

@@ -7,11 +7,14 @@ func _ready() -> void:
 	GameData.load_all_data()
 	ScreenRouter.set_root(screen_root)
 
-	if SaveManager.has_save():
-		var result: Dictionary = SaveManager.load_game()
+	if SaveManager.has_any_save():
+		var result: Dictionary = SaveManager.load_latest_game()
 		if not result.get("success", false):
 			GameState.new_game()
-	else:
-		GameState.new_game()
+			ScreenRouter.show_opening_scene()
+			return
+		ScreenRouter.show_port_screen()
+		return
 
-	ScreenRouter.show_port_screen()
+	GameState.new_game()
+	ScreenRouter.show_opening_scene()
