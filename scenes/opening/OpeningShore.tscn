@@ -1,0 +1,289 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/opening/OpeningShore.gd" id="1"]
+
+[node name="OpeningShore" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="World" type="Control" parent="."]
+layout_mode = 1
+offset_right = 1280.0
+offset_bottom = 800.0
+mouse_filter = 2
+
+[node name="Sky" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 310.0
+color = Color(0.529412, 0.690196, 0.831373, 1)
+
+[node name="Sea" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_top = 220.0
+offset_right = 1280.0
+offset_bottom = 520.0
+color = Color(0.239216, 0.447059, 0.560784, 1)
+
+[node name="Sand" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_top = 470.0
+offset_right = 1280.0
+offset_bottom = 800.0
+color = Color(0.760784, 0.701961, 0.552941, 1)
+
+[node name="Foam" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_top = 456.0
+offset_right = 1280.0
+offset_bottom = 485.0
+color = Color(0.858824, 0.905882, 0.909804, 0.658824)
+
+[node name="Boat" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 492.0
+offset_right = 280.0
+offset_bottom = 582.0
+
+[node name="BoatLabel" type="Label" parent="World/Boat"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -52.0
+offset_top = -10.0
+offset_right = 52.0
+offset_bottom = 10.0
+text = "Battered Rowboat"
+horizontal_alignment = 1
+
+[node name="BoatZone" type="Control" parent="World"]
+layout_mode = 0
+offset_left = 88.0
+offset_top = 470.0
+offset_right = 308.0
+offset_bottom = 606.0
+mouse_filter = 2
+
+[node name="DebrisA" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_left = 350.0
+offset_top = 555.0
+offset_right = 410.0
+offset_bottom = 572.0
+color = Color(0.447059, 0.313726, 0.211765, 1)
+
+[node name="DebrisB" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_left = 458.0
+offset_top = 604.0
+offset_right = 512.0
+offset_bottom = 620.0
+color = Color(0.447059, 0.313726, 0.211765, 1)
+
+[node name="Satchel" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 530.0
+offset_top = 565.0
+offset_right = 582.0
+offset_bottom = 606.0
+
+[node name="SatchelZone" type="Control" parent="World"]
+layout_mode = 0
+offset_left = 514.0
+offset_top = 548.0
+offset_right = 600.0
+offset_bottom = 622.0
+mouse_filter = 2
+
+[node name="LanternA" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_left = 705.0
+offset_top = 524.0
+offset_right = 721.0
+offset_bottom = 540.0
+color = Color(1, 0.839216, 0.423529, 1)
+
+[node name="LanternB" type="ColorRect" parent="World"]
+layout_mode = 0
+offset_left = 858.0
+offset_top = 474.0
+offset_right = 874.0
+offset_bottom = 490.0
+color = Color(1, 0.839216, 0.423529, 1)
+
+[node name="DockGlow" type="ColorRect" parent="World"]
+visible = false
+layout_mode = 0
+offset_left = 954.0
+offset_top = 378.0
+offset_right = 1180.0
+offset_bottom = 690.0
+color = Color(1, 0.862745, 0.423529, 0.113725)
+
+[node name="Dock" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 980.0
+offset_top = 396.0
+offset_right = 1152.0
+offset_bottom = 655.0
+
+[node name="DockLabel" type="Label" parent="World/Dock"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -44.0
+offset_top = -10.0
+offset_right = 44.0
+offset_bottom = 10.0
+text = "Old Dock"
+horizontal_alignment = 1
+
+[node name="Shack" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 1082.0
+offset_top = 296.0
+offset_right = 1232.0
+offset_bottom = 408.0
+
+[node name="ShackLabel" type="Label" parent="World/Shack"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -32.0
+offset_top = -10.0
+offset_right = 32.0
+offset_bottom = 10.0
+text = "Shack"
+horizontal_alignment = 1
+
+[node name="Fisher" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 1030.0
+offset_top = 520.0
+offset_right = 1086.0
+offset_bottom = 610.0
+
+[node name="FisherLabel" type="Label" parent="World/Fisher"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -18.0
+offset_top = 40.0
+offset_right = 18.0
+offset_bottom = 58.0
+text = "Fisher"
+horizontal_alignment = 1
+
+[node name="FisherZone" type="Control" parent="World"]
+layout_mode = 0
+offset_left = 992.0
+offset_top = 486.0
+offset_right = 1112.0
+offset_bottom = 642.0
+mouse_filter = 2
+
+[node name="Player" type="Panel" parent="World"]
+layout_mode = 0
+offset_left = 222.0
+offset_top = 614.0
+offset_right = 258.0
+offset_bottom = 664.0
+
+[node name="PlayerLabel" type="Label" parent="World/Player"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -12.0
+offset_top = -11.0
+offset_right = 12.0
+offset_bottom = 11.0
+text = "You"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TopPanel" type="PanelContainer" parent="HUD"]
+offset_left = 18.0
+offset_top = 18.0
+offset_right = 430.0
+offset_bottom = 110.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/TopPanel"]
+layout_mode = 0
+offset_right = 412.0
+offset_bottom = 92.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/TopPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="ObjectiveLabel" type="Label" parent="HUD/TopPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Objective"
+
+[node name="HintLabel" type="Label" parent="HUD/TopPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = "Hint"
+
+[node name="BottomPanel" type="PanelContainer" parent="HUD"]
+offset_left = 18.0
+offset_top = 686.0
+offset_right = 1004.0
+offset_bottom = 782.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HUD/BottomPanel"]
+layout_mode = 0
+offset_right = 986.0
+offset_bottom = 96.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="StoryLabel" type="Label" parent="HUD/BottomPanel/MarginContainer"]
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="InteractPrompt" type="Label" parent="HUD"]
+visible = false
+offset_left = 944.0
+offset_top = 680.0
+offset_right = 1245.0
+offset_bottom = 707.0
+horizontal_alignment = 2
+text = ""
+
+[node name="ContinueButton" type="Button" parent="HUD"]
+visible = false
+offset_left = 1030.0
+offset_top = 724.0
+offset_right = 1246.0
+offset_bottom = 772.0
+text = "Continue to Gull's Landing"
