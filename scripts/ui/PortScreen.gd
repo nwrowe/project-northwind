@@ -42,6 +42,7 @@ func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
+	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
 	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
@@ -124,3 +125,8 @@ func _on_load_slot_requested(slot_id: String) -> void:
 	save_slot_dialog.close_dialog()
 	if result.get("success", false):
 		refresh_ui()
+
+func _on_new_game_pressed() -> void:
+	GameState.new_game()
+	action_status_label.text = "Started a new game."
+	refresh_ui()
