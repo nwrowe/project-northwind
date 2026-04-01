@@ -45,15 +45,17 @@ func _ready() -> void:
 	$VVoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
-		save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
+
+	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
 	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
 	save_slot_dialog.load_requested.connect(_on_load_slot_requested)
 	save_slot_dialog.delete_requested.connect(_on_delete_slot_requested)
 	refresh_ui()
-		if not GameState.pending_status_message.is_empty():
-			action_status_label.text = GameState.pending_status_message
-			GameState.pending_status_message = ""
+
+	if not GameState.pending_status_message.is_empty():
+		action_status_label.text = GameState.pending_status_message
+		GameState.pending_status_message = ""
 
 func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
