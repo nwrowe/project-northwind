@@ -29,6 +29,7 @@ var save_slot_dialog
 @onready var cargo_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
 @onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
+@onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
@@ -43,11 +44,14 @@ func _ready() -> void:
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
+	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
+
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
 	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
 	save_slot_dialog.load_requested.connect(_on_load_slot_requested)
 	refresh_ui()
+
 	if not GameState.pending_status_message.is_empty():
 		action_status_label.text = GameState.pending_status_message
 		GameState.pending_status_message = ""
@@ -127,6 +131,8 @@ func _on_load_slot_requested(slot_id: String) -> void:
 		refresh_ui()
 
 func _on_new_game_pressed() -> void:
+	new_game_confirm_dialog.popup_centered()
+
+func _on_new_game_confirmed() -> void:
 	GameState.new_game()
-	action_status_label.text = "Started a new game."
-	refresh_ui()
+	ScreenRouter.show_opening_scene()
