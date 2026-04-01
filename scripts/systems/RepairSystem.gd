@@ -9,7 +9,8 @@ func get_missing_durability() -> int:
 
 func get_repair_rate() -> float:
 	var port: Dictionary = get_current_port()
-	return 1.5 * float(port.get("repair_cost_modifier", 1.0))
+	var base_rate: float = 1.5 * float(port.get("repair_cost_modifier", 1.0))
+	return max(0.5, base_rate * (1.0 - GameState.get_repair_discount()))
 
 func get_repair_cost(points: int) -> int:
 	if points <= 0:
@@ -23,7 +24,6 @@ func get_max_affordable_repair_points() -> int:
 	var missing: int = get_missing_durability()
 	if missing <= 0:
 		return 0
-	var rate: float = get_repair_rate()
 	var affordable: int = 0
 	for points in range(1, missing + 1):
 		if get_repair_cost(points) <= GameState.money:
@@ -49,15 +49,12 @@ func repair(points: int) -> Dictionary:
 	var cost: int = get_repair_cost(points)
 	if GameState.money < cost:
 		return {"success": false, "message": "Not enough money to repair %d durability." % points}
-
 	GameState.money -= cost
 	GameState.ship_durability = min(GameState.get_effective_max_durability(), GameState.ship_durability + points)
-	return {
-		"success": true,
-		"message": "Repaired %d durability for %d coins." % [points, cost],
-		"points": points,
-		"cost": cost,
-	}
+	var message: String = "Repaired %d durability for %d coins." % [points, cost]
+	if GameState.get_repair_discount() > 0.0:
+		message += " Carpenter efficiencies reduced repair cost by %.0f%%." % (GameState.get_repair_discount() * 100.0)
+	return {"success": true, "message": message, "points": points, "cost": cost}
 
 func repair_full() -> Dictionary:
 	return repair(get_missing_durability())

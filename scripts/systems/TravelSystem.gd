@@ -10,7 +10,9 @@ func get_routes_from_current_port() -> Array:
 func get_supply_cost(route: Dictionary) -> int:
 	var distance: float = float(route.get("distance", 0))
 	var efficiency: float = max(0.1, GameState.get_effective_supply_efficiency())
-	return int(ceil(distance / efficiency))
+	var base_cost: int = int(ceil(distance / efficiency))
+	var discounted: int = int(ceil(float(base_cost) * (1.0 - GameState.get_travel_supply_discount())))
+	return max(1, discounted)
 
 func can_travel(route: Dictionary) -> bool:
 	if route.is_empty():
@@ -58,6 +60,8 @@ func _build_arrival_summary(from_port_name: String, to_port_name: String, supply
 	var lines: Array[String] = []
 	lines.append("Arrived: %s -> %s" % [from_port_name, to_port_name])
 	lines.append("Supplies spent: %d" % supply_cost)
+	if GameState.get_travel_supply_discount() > 0.0:
+		lines.append("Navigator saved %.0f%% of normal travel supplies" % (GameState.get_travel_supply_discount() * 100.0))
 	lines.append("Event: %s" % ("Triggered" if event_triggered else "None"))
 
 	var completed_messages: Array = contract_result.get("completed_messages", [])

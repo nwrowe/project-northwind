@@ -25,14 +25,11 @@ func accept_contract(contract_id: String) -> Dictionary:
 	var requested_days: int = int(contract.get("deadline_days", 0))
 	var actual_days: int = max(requested_days, minimum_days + 2)
 	var delivery_bonus: int = _compute_delivery_bonus(contract, minimum_days)
-	GameState.active_contracts.append({
-		"contract_id": contract_id,
-		"accepted_day": GameState.day_count,
-		"deadline_day": GameState.day_count + actual_days,
-		"status": "active",
-		"delivery_bonus": delivery_bonus,
-	})
-	return {"success": true, "message": "Accepted contract. Deliver within %d days (est. sail %d). Delivery bonus: %d." % [actual_days, minimum_days, delivery_bonus]}
+	GameState.active_contracts.append({"contract_id": contract_id, "accepted_day": GameState.day_count, "deadline_day": GameState.day_count + actual_days, "status": "active", "delivery_bonus": delivery_bonus})
+	var message: String = "Accepted contract. Deliver within %d days (est. sail %d). Delivery bonus: %d." % [actual_days, minimum_days, delivery_bonus]
+	if GameState.get_contract_bonus_multiplier() > 1.0:
+		message += " Captain leverage improved the terms."
+	return {"success": true, "message": message}
 
 func get_active_contracts() -> Array:
 	var results: Array = []
@@ -149,7 +146,7 @@ func _compute_delivery_bonus(contract: Dictionary, estimated_days: int) -> int:
 	var destination_sell_total: int = market_system.get_sell_price(target_port_id, good_id) * quantity
 	var desired_profit: int = max(int(ceil(source_buy_total * 0.25)), 12 + estimated_days * 6 + quantity * 2)
 	var minimum_bonus: int = source_buy_total + desired_profit - destination_sell_total
-	return max(int(contract.get("reward", 0)), minimum_bonus)
+	return int(ceil(float(max(int(contract.get("reward", 0)), minimum_bonus)) * GameState.get_contract_bonus_multiplier()))
 
 func _estimate_route_days(start_port_id: String, target_port_id: String) -> int:
 	if start_port_id == target_port_id:
