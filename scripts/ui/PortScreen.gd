@@ -48,11 +48,11 @@ func refresh_ui() -> void:
 	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
-	day_money_label.text = "Day %d | Money %d | Trust %d | Infamy %d" % [GameState.day_count, GameState.money, GameState.trust_rating, GameState.infamy_rating]
+	day_money_label.text = "Day %d | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.day_count, GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
-	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion()]
-	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength()]
+	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d | Wages due %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion(), GameState.get_crew_wages_due() + GameState.get_officer_wages_due()]
+	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
 	local_flavor_label.text = str(flavor.get("overview", ""))
 	npc_label.text = str(flavor.get("npc", ""))
 	climate_label.text = "Climate: %s" % climate_system.get_climate_name_for_current_port()
@@ -72,14 +72,14 @@ func _build_contract_summary() -> String:
 	var active: Array = contract_system.get_active_contracts()
 	var completable: int = contract_system.get_completable_contracts_for_current_port().size()
 	if active.is_empty():
-		return "Harbormaster: %d contracts available | No active jobs | Reserve ships: %d" % [available, GameState.reserve_ship_ids.size()]
+		return "Harbormaster: %d contracts available | No active jobs | Total trip costs %d" % [available, GameState.get_total_upkeep_due()]
 	var nearest_deadline: int = 9999
 	for entry in active:
 		nearest_deadline = min(nearest_deadline, int(entry.get("days_remaining", 9999)))
 	var urgency := ""
 	if nearest_deadline <= 1:
 		urgency = " | Deadline urgent"
-	return "Harbormaster: %d contracts available | %d active | %d ready now | Reserve ships %d%s" % [available, active.size(), completable, GameState.reserve_ship_ids.size(), urgency]
+	return "Harbormaster: %d contracts available | %d active | %d ready now | Trip costs %d%s" % [available, active.size(), completable, GameState.get_total_upkeep_due(), urgency]
 
 func _on_market_pressed() -> void:
 	ScreenRouter.show_market_screen()

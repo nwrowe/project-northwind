@@ -5,6 +5,7 @@ var current_rumor_id: String = ""
 var pending_round_action: String = ""
 const RUMOR_ROUND_COST := 4
 const NEW_FACES_COST := 6
+const CREW_ROUND_COST_BASE := 8
 
 @onready var header_label = $VBoxContainer/HeaderLabel
 @onready var intro_label = $VBoxContainer/IntroPanel/VBoxContainer/IntroLabel
@@ -22,6 +23,11 @@ func _ready() -> void:
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/NewRumorButton.pressed.connect(_on_new_rumor_pressed)
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/NewFacesButton.pressed.connect(_on_new_faces_pressed)
 	$VBoxContainer/FooterPanel/VBoxContainer/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
+	var crew_round_button := Button.new()
+	crew_round_button.name = "CrewRoundButton"
+	crew_round_button.text = "Buy Crew Round"
+	crew_round_button.pressed.connect(_on_crew_round_pressed)
+	button_row.add_child(crew_round_button)
 	var confirm_button := Button.new()
 	confirm_button.name = "ConfirmRoundButton"
 	confirm_button.text = "Confirm"
@@ -43,7 +49,7 @@ func refresh_ui() -> void:
 	intro_label.text = tavern_system.get_tavern_intro()
 	keeper_label.text = "Host: %s" % tavern_system.get_tavernkeeper_name()
 	officer_summary_label.text = "Officers: %s" % " | ".join(tavern_system.get_officer_summary_lines())
-	crew_summary_label.text = "Crew: %d / %d | Money: %d" % [GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.money]
+	crew_summary_label.text = "Crew: %d / %d | Money: %d | Morale: %d" % [GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.money, GameState.morale]
 	_refresh_recruits()
 
 func _refresh_recruits() -> void:
@@ -110,31 +116,47 @@ func _on_new_rumor_pressed() -> void:
 func _on_new_faces_pressed() -> void:
 	_request_round("faces")
 
+func _on_crew_round_pressed() -> void:
+	_request_round("crew")
+
 func _request_round(action: String) -> void:
-	var cost: int = RUMOR_ROUND_COST if action == "rumor" else NEW_FACES_COST
+	var cost: int = _get_round_cost(action)
 	if GameState.money < cost:
-		info_label.text = "Not enough gold to buy a round."
+		info_label.text = "Not enough gold to pay for that round."
 		return
 	pending_round_action = action
-	info_label.text = "Spend %d gold to buy a round?" % cost
+	if action == "crew":
+		info_label.text = "Spend %d gold to lift crew morale?" % cost
+	else:
+		info_label.text = "Spend %d gold to buy a round?" % cost
 	button_row.get_node("ConfirmRoundButton").visible = true
 	button_row.get_node("CancelRoundButton").visible = true
+
+func _get_round_cost(action: String) -> int:
+	if action == "rumor":
+		return RUMOR_ROUND_COST
+	if action == "faces":
+		return NEW_FACES_COST
+	return CREW_ROUND_COST_BASE + int(ceil(float(GameState.crew_count) / 2.0))
 
 func _on_confirm_round_pressed() -> void:
 	if pending_round_action.is_empty():
 		return
-	var cost: int = RUMOR_ROUND_COST if pending_round_action == "rumor" else NEW_FACES_COST
+	var cost: int = _get_round_cost(pending_round_action)
 	if GameState.money < cost:
-		info_label.text = "Not enough gold to buy a round."
+		info_label.text = "Not enough gold to pay for that round."
 		pending_round_action = ""
 		return
 	GameState.money -= cost
 	if pending_round_action == "rumor":
 		_show_new_rumor()
 		info_label.text = "You buy a round and the room loosens a fresh rumor."
-	else:
+	elif pending_round_action == "faces":
 		var result: Dictionary = tavern_system.reroll_candidates_for_current_port()
 		info_label.text = "%s (-%d gold)" % [str(result.get("message", "")), cost]
+	else:
+		GameState.recover_morale_in_port(12 + int(floor(float(GameState.get_effective_command_rating()) / 2.0)))
+		info_label.text = "The crew relaxes, morale rises, and the tavern rings with song. (-%d gold)" % cost
 	refresh_ui()
 	pending_round_action = ""
 	button_row.get_node("ConfirmRoundButton").visible = false
