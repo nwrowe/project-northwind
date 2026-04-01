@@ -11,7 +11,10 @@ func _ready() -> void:
 		var result: Dictionary = SaveManager.load_game()
 		if not result.get("success", false):
 			GameState.new_game()
-	else:
-		GameState.new_game()
+			ScreenRouter.show_opening_scene()
+			return
+		ScreenRouter.show_port_screen()
+		return
 
-	ScreenRouter.show_port_screen()
+	GameState.new_game()
+	ScreenRouter.show_opening_scene()
