@@ -178,6 +178,25 @@ func get_effective_gunnery_rating() -> int:
 	return get_role_stat("gunner", "fighting") + get_role_stat("captain", "leadership")
 func get_effective_command_rating() -> int:
 	return get_role_stat("captain", "leadership") + get_role_stat("captain", "sailing")
+func get_crew_discipline() -> int:
+	return get_effective_command_rating() + int(ceil(float(crew_count) / 3.0))
+func get_travel_supply_discount() -> float:
+	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01
+	return min(0.30, discount)
+func get_repair_discount() -> float:
+	var discount: float = float(get_role_stat("carpenter", "repair")) * 0.04 + float(get_role_stat("captain", "leadership")) * 0.015
+	return min(0.35, discount)
+func get_contract_bonus_multiplier() -> float:
+	var bonus: float = 1.0 + float(get_role_stat("captain", "leadership")) * 0.04 + float(max(0, trust_rating)) * 0.005
+	return min(1.35, bonus)
+func get_passive_intimidation_bonus() -> int:
+	return int(floor(float(get_role_stat("gunner", "fighting") + get_role_stat("captain", "leadership")) / 2.0))
+func apply_crew_loss(loss: int) -> int:
+	if loss <= 0:
+		return 0
+	var previous: int = crew_count
+	crew_count = max(1, crew_count - loss)
+	return previous - crew_count
 
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrade_id in owned_upgrades
@@ -224,6 +243,9 @@ func apply_event_effects(effects: Dictionary) -> void:
 	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
 	supplies -= int(effects.get("supply_loss", 0))
 	money -= int(effects.get("money_loss", 0))
+	var crew_loss: int = int(effects.get("crew_loss", 0))
+	if crew_loss > 0:
+		apply_crew_loss(crew_loss)
 	var cargo_loss_percent: float = float(effects.get("cargo_loss_percent", 0.0))
 	if cargo_loss_percent > 0.0:
 		for good_id in cargo.keys().duplicate():

@@ -22,6 +22,9 @@ func refresh_ui() -> void:
 	event_name_label.text = str(payload.get("name", "Event"))
 	event_text_label.text = str(payload.get("text", ""))
 	var details: Array[String] = []
+	var tactical: String = str(payload.get("tactical_summary", ""))
+	if not tactical.is_empty() and bool(payload.get("unresolved", false)):
+		details.append(tactical)
 	var outcome: String = str(payload.get("outcome_text", ""))
 	if not outcome.is_empty():
 		details.append(outcome)

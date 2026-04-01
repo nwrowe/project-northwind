@@ -51,7 +51,7 @@ func create_pirate_encounter(event_data: Dictionary, route_risk: float) -> Dicti
 	return {
 		"event_id": event_data.get("id", ""),
 		"name": event_data.get("name", "Pirates"),
-		"text": "%s\n\nYour officers shout over the surf. Choose how to respond." % str(event_data.get("text", "")),
+		"text": "%s\n\n%s" % [str(event_data.get("text", "")), _build_pirate_preview(pirate_power)],
 		"event_type": "pirates",
 		"triggered": true,
 		"unresolved": true,
@@ -61,7 +61,8 @@ func create_pirate_encounter(event_data: Dictionary, route_risk: float) -> Dicti
 			{"id": "fight", "label": "Fight"},
 			{"id": "intimidate", "label": "Intimidate"},
 			{"id": "surrender", "label": "Surrender Cargo"}
-		]
+		],
+		"tactical_summary": _build_pirate_preview(pirate_power),
 	}
 
 func resolve_event_choice(payload: Dictionary, choice_id: String) -> Dictionary:
@@ -76,42 +77,60 @@ func _resolve_pirate_choice(payload: Dictionary, choice_id: String) -> Dictionar
 	var outcome_text: String = ""
 	var trust_delta: int = 0
 	var infamy_delta: int = 0
-	var roll_bonus: int = randi() % 4
+	var roll_bonus: int = randi() % 5
+	var crew_loss: int = 0
 
 	if choice_id == "flee":
-		var flee_score: int = GameState.get_effective_evasion() + GameState.get_effective_navigation_rating()
-		if flee_score + roll_bonus >= pirate_power + 6:
-			effects = {"durability_loss": 0, "supply_loss": 1, "money_loss": 0, "cargo_loss_percent": 0.0}
-			outcome_text = "Your navigator threads the ship through danger and you slip away with only extra supply usage."
+		var flee_score: int = GameState.get_effective_evasion() + GameState.get_effective_navigation_rating() + GameState.get_crew_discipline()
+		if flee_score + roll_bonus >= pirate_power + 11:
+			effects = {"durability_loss": 0, "supply_loss": 1, "money_loss": 0, "cargo_loss_percent": 0.0, "crew_loss": 0}
+			outcome_text = "A clean escape. Your navigator reads the water perfectly and the crew keeps formation under pressure."
+		elif flee_score + roll_bonus >= pirate_power + 5:
+			effects = {"durability_loss": max(1, int(pirate_power / 3)), "supply_loss": 1, "money_loss": 0, "cargo_loss_percent": 0.0, "crew_loss": 0}
+			outcome_text = "You escape, but only after the raiders scrape the hull and force hard maneuvering."
 		else:
-			effects = {"durability_loss": max(4, pirate_power), "supply_loss": 1, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.05}
-			outcome_text = "The pirates catch your stern during the escape and force losses before breaking off."
+			crew_loss = 1 + int(pirate_power / 8)
+			effects = {"durability_loss": max(4, pirate_power), "supply_loss": 1, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.05, "crew_loss": crew_loss}
+			outcome_text = "The pirates overtake your stern before you break away. The escape costs cargo, coin, and crew."
 	elif choice_id == "fight":
-		var offense: int = GameState.get_effective_firepower() + GameState.get_effective_boarding_strength() + GameState.get_effective_gunnery_rating() + int(GameState.crew_count / 2)
+		var offense: int = GameState.get_effective_firepower() + GameState.get_effective_boarding_strength() + GameState.get_effective_gunnery_rating() + GameState.get_crew_discipline()
 		var defense: int = GameState.get_effective_hull_armor() + GameState.get_effective_repair_rating()
-		if offense + defense + roll_bonus >= pirate_power + 8:
-			effects = {"durability_loss": max(1, int(pirate_power / 3)), "supply_loss": 0, "money_loss": -(8 + pirate_power), "cargo_loss_percent": 0.0}
-			outcome_text = "Your gunnery drives the raiders off and your crew hauls captured loot aboard."
+		var combat_score: int = offense + defense + roll_bonus
+		if combat_score >= pirate_power + 13:
+			effects = {"durability_loss": max(0, int(pirate_power / 4)), "supply_loss": 0, "money_loss": -(12 + pirate_power), "cargo_loss_percent": 0.0, "crew_loss": 0}
+			outcome_text = "A decisive victory. Your guns speak first, the pirates break, and your crew seizes valuables from the wreckage."
+			trust_delta = 1
+			infamy_delta = 2
+		elif combat_score >= pirate_power + 6:
+			crew_loss = 1
+			effects = {"durability_loss": max(2, int(pirate_power / 2)), "supply_loss": 0, "money_loss": -(4 + int(pirate_power / 2)), "cargo_loss_percent": 0.0, "crew_loss": crew_loss}
+			outcome_text = "You win a hard fight. The raiders break off, but the deck is bloodied and the hull takes punishment."
 			trust_delta = 1
 			infamy_delta = 1
 		else:
-			effects = {"durability_loss": pirate_power + 6, "supply_loss": 1, "money_loss": 10 + pirate_power, "cargo_loss_percent": 0.10}
-			outcome_text = "The exchange turns ugly. You survive, but the pirates leave splintered hulls and lighter purses behind."
+			crew_loss = 1 + int(pirate_power / 6)
+			effects = {"durability_loss": pirate_power + 6, "supply_loss": 1, "money_loss": 10 + pirate_power, "cargo_loss_percent": 0.10, "crew_loss": crew_loss}
+			outcome_text = "The battle turns against you. You survive by forcing space, but only after a damaging and expensive fight."
 			infamy_delta = 1
 	elif choice_id == "intimidate":
-		var intimidate_score: int = GameState.get_effective_intimidation() + GameState.get_effective_command_rating() + int(GameState.infamy_rating / 2)
-		if intimidate_score + roll_bonus >= pirate_power + 7:
-			effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 0, "cargo_loss_percent": 0.0}
-			outcome_text = "Your ship looks dangerous enough that the raiders decide to look for easier prey."
+		var intimidate_score: int = GameState.get_effective_intimidation() + GameState.get_passive_intimidation_bonus() + GameState.get_effective_command_rating() + int(GameState.infamy_rating / 2)
+		if intimidate_score + roll_bonus >= pirate_power + 10:
+			effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 0, "cargo_loss_percent": 0.0, "crew_loss": 0}
+			outcome_text = "Your banner, guns, and reputation are enough. The raiders choose an easier target."
 			trust_delta = -1
 			infamy_delta = 2
+		elif intimidate_score + roll_bonus >= pirate_power + 4:
+			effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 4 + int(pirate_power / 2), "cargo_loss_percent": 0.0, "crew_loss": 0}
+			outcome_text = "A tense standoff. The pirates back off, but only after extracting a costly tribute."
+			infamy_delta = 1
 		else:
-			effects = {"durability_loss": 4 + int(pirate_power / 2), "supply_loss": 0, "money_loss": 6 + pirate_power, "cargo_loss_percent": 0.0}
-			outcome_text = "The bluff fails. The raiders test your resolve and exact a price before retreating."
+			crew_loss = 1
+			effects = {"durability_loss": 4 + int(pirate_power / 2), "supply_loss": 0, "money_loss": 6 + pirate_power, "cargo_loss_percent": 0.0, "crew_loss": crew_loss}
+			outcome_text = "The bluff fails. The raiders test your strength and leave you shaken before withdrawing."
 			infamy_delta = 1
 	else:
-		effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.05}
-		outcome_text = "You throw cargo and coin overboard to buy safe passage."
+		effects = {"durability_loss": 0, "supply_loss": 0, "money_loss": 8 + pirate_power, "cargo_loss_percent": 0.07, "crew_loss": 0}
+		outcome_text = "You throw cargo and coin overboard to buy safe passage. The raiders let you limp onward."
 
 	var adjusted_effects: Dictionary = _adjust_effects_for_officers(effects, "pirates")
 	GameState.apply_event_effects(adjusted_effects)
@@ -126,15 +145,19 @@ func _adjust_effects_for_officers(raw_effects: Dictionary, event_type: String) -
 	var durability_loss: int = int(effects.get("durability_loss", 0))
 	var supply_loss: int = int(effects.get("supply_loss", 0))
 	var money_loss: int = int(effects.get("money_loss", 0))
+	var crew_loss: int = int(effects.get("crew_loss", 0))
 	if durability_loss > 0:
 		durability_loss = max(0, durability_loss - int(GameState.get_effective_repair_rating() / 4))
 	if supply_loss > 0:
 		supply_loss = max(0, supply_loss - int(GameState.get_effective_navigation_rating() / 6))
 	if money_loss > 0 and event_type == "pirates":
 		money_loss = max(0, money_loss - int(GameState.get_effective_command_rating() / 3))
+	if crew_loss > 0:
+		crew_loss = max(0, crew_loss - int(GameState.get_effective_command_rating() / 6))
 	effects["durability_loss"] = durability_loss
 	effects["supply_loss"] = supply_loss
 	effects["money_loss"] = money_loss
+	effects["crew_loss"] = crew_loss
 	return effects
 
 func _build_outcome_text(effects: Dictionary) -> String:
@@ -142,6 +165,7 @@ func _build_outcome_text(effects: Dictionary) -> String:
 	var durability_loss: int = int(effects.get("durability_loss", 0))
 	var supply_loss: int = int(effects.get("supply_loss", 0))
 	var money_loss: int = int(effects.get("money_loss", 0))
+	var crew_loss: int = int(effects.get("crew_loss", 0))
 	var cargo_loss_percent: float = float(effects.get("cargo_loss_percent", 0.0))
 	if durability_loss != 0:
 		outcome_parts.append("Durability %s%d" % ["-" if durability_loss > 0 else "+", abs(durability_loss)])
@@ -152,8 +176,19 @@ func _build_outcome_text(effects: Dictionary) -> String:
 			outcome_parts.append("Money -%d" % money_loss)
 		else:
 			outcome_parts.append("Money +%d" % abs(money_loss))
+	if crew_loss > 0:
+		outcome_parts.append("Crew -%d" % crew_loss)
 	if cargo_loss_percent > 0.0:
 		outcome_parts.append("Cargo loss %d%%" % int(round(cargo_loss_percent * 100.0)))
 	if outcome_parts.is_empty():
 		return "No immediate losses."
 	return ", ".join(outcome_parts)
+
+func _build_pirate_preview(pirate_power: int) -> String:
+	return "Pirate threat %d | Attack %d | Defense %d | Escape %d | Intimidation %d" % [
+		pirate_power,
+		GameState.get_effective_firepower() + GameState.get_effective_boarding_strength() + GameState.get_effective_gunnery_rating() + GameState.get_crew_discipline(),
+		GameState.get_effective_hull_armor() + GameState.get_effective_repair_rating(),
+		GameState.get_effective_evasion() + GameState.get_effective_navigation_rating() + GameState.get_crew_discipline(),
+		GameState.get_effective_intimidation() + GameState.get_passive_intimidation_bonus() + GameState.get_effective_command_rating(),
+	]
