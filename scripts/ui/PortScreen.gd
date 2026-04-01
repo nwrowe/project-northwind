@@ -3,6 +3,8 @@ extends Control
 var contract_system := ContractSystem.new()
 var climate_system := ClimateSystem.new()
 
+const SAVE_SLOT_DIALOG_SCENE := preload("res://scenes/ui/SaveSlotDialog.tscn")
+
 const PORT_FLAVOR := {
 	"aurelia": {"overview": "Aurelia is a calm starter harbor where traders swap staples and gossip under sun-faded awnings.", "npc": "Maris the Dock Clerk keeps ledgers on every captain and always knows which routes are safest this week."},
 	"varenna": {"overview": "Varenna is a cloth-heavy commercial stop with tight lanes, fast deals, and merchants who watch every coin.", "npc": "Ida the Factor brokers textile contracts and quietly tips regular captains about shortages inland."},
@@ -10,6 +12,8 @@ const PORT_FLAVOR := {
 	"marsa_quay": {"overview": "Marsa Quay is practical and busy, full of grain, oil, and workers who value reliability over flash.", "npc": "Quartermaster Toma runs the chandlery and remembers every captain who paid on time."},
 	"thalos": {"overview": "Thalos is wealthier and more demanding, where luxury cargo sells well and mistakes cost more.", "npc": "Archivist Nera in the harbor office favors captains who finish contracts before the ink dries."}
 }
+
+var save_slot_dialog
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
@@ -38,6 +42,10 @@ func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
+	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
+	add_child(save_slot_dialog)
+	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
+	save_slot_dialog.load_requested.connect(_on_load_slot_requested)
 	refresh_ui()
 	if not GameState.pending_status_message.is_empty():
 		action_status_label.text = GameState.pending_status_message
@@ -100,7 +108,19 @@ func _on_resupply_pressed() -> void:
 func _on_upgrade_pressed() -> void:
 	ScreenRouter.show_upgrade_panel()
 func _on_save_pressed() -> void:
-	action_status_label.text = str(SaveManager.save_game().get("message", "Save complete."))
+	save_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:
-	action_status_label.text = str(SaveManager.load_game().get("message", "Load complete."))
+	save_slot_dialog.open_for_load()
+
+func _on_save_slot_requested(slot_id: String, display_name: String) -> void:
+	var result: Dictionary = SaveManager.save_game(slot_id, display_name)
+	action_status_label.text = str(result.get("message", "Save complete."))
+	save_slot_dialog.close_dialog()
 	refresh_ui()
+
+func _on_load_slot_requested(slot_id: String) -> void:
+	var result: Dictionary = SaveManager.load_game(slot_id)
+	action_status_label.text = str(result.get("message", "Load complete."))
+	save_slot_dialog.close_dialog()
+	if result.get("success", false):
+		refresh_ui()
