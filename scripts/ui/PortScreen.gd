@@ -39,10 +39,10 @@ func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
-	$VVoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
+	$VBoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
-	$VVoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
+	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
 
@@ -66,7 +66,7 @@ func refresh_ui() -> void:
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
 	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d | Wages due %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion(), GameState.get_crew_wages_due() + GameState.get_officer_wages_due()]
-	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkpeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
+	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
 	local_flavor_label.text = str(flavor.get("overview", ""))
 	npc_label.text = str(flavor.get("npc", ""))
 	climate_label.text = "Climate: %s" % climate_system.get_climate_name_for_current_port()
@@ -96,27 +96,27 @@ func _build_contract_summary() -> String:
 	return "Harbormaster: %d contracts available | %d active | %d ready now | Trip costs %d%s" % [available, active.size(), completable, GameState.get_total_upkeep_due(), urgency]
 
 func _on_market_pressed() -> void:
-\tScreenRouter.show_market_screen()
+	ScreenRouter.show_market_screen()
 func _on_travel_pressed() -> void:
-\tScreenRouter.show_travel_screen()
+	ScreenRouter.show_travel_screen()
 func _on_contracts_pressed() -> void:
-\tScreenRouter.show_contract_screen()
+	ScreenRouter.show_contract_screen()
 func _on_tavern_pressed() -> void:
-\tScreenRouter.show_tavern_screen()
+	ScreenRouter.show_tavern_screen()
 func _on_office_pressed() -> void:
-\tScreenRouter.show_office_screen()
+	ScreenRouter.show_office_screen()
 func _on_shipyard_pressed() -> void:
-\tScreenRouter.show_shipyard_screen()
+	ScreenRouter.show_shipyard_screen()
 func _on_repair_pressed() -> void:
-\tScreenRouter.show_repair_screen()
+	ScreenRouter.show_repair_screen()
 func _on_resupply_pressed() -> void:
-\tScreenRouter.show_chandlery_screen()
+	ScreenRouter.show_chandlery_screen()
 func _on_upgrade_pressed() -> void:
-\tScreenRouter.show_upgrade_panel()
+	ScreenRouter.show_upgrade_panel()
 func _on_save_pressed() -> void:
-\tsave_slot_dialog.open_for_save()
+	save_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:
-\tsave_slot_dialog.open_for_load()
+	save_slot_dialog.open_for_load()
 
 func _on_save_slot_requested(slot_id: String, display_name: String) -> void:
 	var result: Dictionary = SaveManager.save_game(slot_id, display_name)
@@ -138,8 +138,8 @@ func _on_delete_slot_requested(slot_id: String) -> void:
 		save_slot_dialog.refresh_slots()
 
 func _on_new_game_pressed() -> void:
-\tnew_game_confirm_dialog.popup_centered()
+	new_game_confirm_dialog.popup_centered()
 
 func _on_new_game_confirmed() -> void:
-\tGameState.new_game()
-\tScreenRouter.show_opening_scene()
+	GameState.new_game()
+	ScreenRouter.show_opening_scene()
