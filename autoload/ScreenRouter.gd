@@ -2,6 +2,7 @@ extends Node
 
 var screen_root: Node = null
 
+const OPENING_SCENE := preload("res://scenes/opening/OpeningShore.tscn")
 const PORT_SCREEN := preload("res://scenes/port/PortScreen.tscn")
 const MARKET_SCREEN := preload("res://scenes/market/MarketScreen.tscn")
 const MARKET_LOG_SCREEN := preload("res://scenes/market/MarketLogScreen.tscn")
@@ -30,6 +31,8 @@ func _show_scene(scene: PackedScene) -> Node:
 	screen_root.add_child(instance)
 	return instance
 
+func show_opening_scene() -> void:
+	_show_scene(OPENING_SCENE)
 func show_port_screen() -> void:
 	_show_scene(PORT_SCREEN)
 func show_market_screen() -> void:
