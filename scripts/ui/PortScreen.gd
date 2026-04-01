@@ -15,19 +15,19 @@ const PORT_FLAVOR = {
 
 var save_slot_dialog
 
-@onready var port_name_label = $VZoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
-@onready var day_money_label = $VVoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
-@onready var ship_label = $VVoxContainer/StatusPanel/VBoxContainer/ShipLabel
+@onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
+@onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
+@onready var ship_label = $VBoxContainer/StatusPanel/VBoxContainer/ShipLabel
 @onready var durability_label = $VBoxContainer/StatusPanel/VBoxContainer/DurabilityLabel
 @onready var supplies_label = $VBoxContainer/StatusPanel/VBoxContainer/SuppliesLabel
-@onready var cargo_label = $VVoxContainer/StatusPanel/VBoxContainer/CargoLabel
+@onready var cargo_label = $VBoxContainer/StatusPanel/VBoxContainer/CargoLabel
 @onready var local_flavor_label = $VBoxContainer/TownPanel/VBoxContainer/LocalFlavorLabel
 @onready var npc_label = $VBoxContainer/TownPanel/VBoxContainer/NpcLabel
-@onready var climate_label = $VZoxContainer/TownPanel/VBoxContainer/ClimateLabel
-@onready var gathering_label = $VVoxContainer/TownPanel/VBoxContainer/GatheringLabel
-@onready var refining_label = $VVoxContainer/TownPanel/VBoxContainer/RefiningLabel
-@onready var cargo_summary_label = $VZoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
-@onready var contract_summary_label = $VVoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
+@onready var climate_label = $VBoxContainer/TownPanel/VBoxContainer/ClimateLabel
+@onready var gathering_label = $VBoxContainer/TownPanel/VBoxContainer/GatheringLabel
+@onready var refining_label = $VBoxContainer/TownPanel/VBoxContainer/RefiningLabel
+@onready var cargo_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
+@onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
