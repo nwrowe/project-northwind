@@ -6,6 +6,10 @@ const GAME_SECONDS_PER_DAY := 86400.0
 const REAL_SECONDS_PER_GAME_DAY := 900.0
 const GAME_SECONDS_PER_REAL_SECOND := GAME_SECONDS_PER_DAY / REAL_SECONDS_PER_GAME_DAY
 const START_OF_DAY_SECONDS := 8.0 * 3600.0
+const WEATHER_ROLLOVER_HOUR := 2.0
+const WEATHER_SUNNY := "sunny"
+const WEATHER_RAINY := "rainy"
+const WEATHER_STORM := "severe_storm"
 
 var current_port_id: String = ""
 var money: int = 0
@@ -30,6 +34,8 @@ var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
 var morale: int = 0
 var game_time_seconds: float = START_OF_DAY_SECONDS
+var current_weather: String = WEATHER_SUNNY
+var weather_cycle_index: int = 0
 var known_port_ids: Array[String] = []
 var ship_task_last_day: Dictionary = {}
 var next_trip_chart_discount: float = 0.0
@@ -67,6 +73,8 @@ func new_game() -> void:
 	office_storage_by_port = {}
 	morale = 0
 	game_time_seconds = START_OF_DAY_SECONDS
+	weather_cycle_index = _get_weather_cycle_index()
+	_roll_weather_for_cycle(weather_cycle_index)
 	known_port_ids = ["aurelia"]
 	ship_task_last_day = {}
 	next_trip_chart_discount = 0.0
@@ -102,6 +110,8 @@ func to_dict() -> Dictionary:
 		"office_storage_by_port": office_storage_by_port,
 		"morale": morale,
 		"game_time_seconds": game_time_seconds,
+		"current_weather": current_weather,
+		"weather_cycle_index": weather_cycle_index,
 		"known_port_ids": known_port_ids,
 		"ship_task_last_day": ship_task_last_day,
 		"next_trip_chart_discount": next_trip_chart_discount,
@@ -136,6 +146,8 @@ func load_from_dict(data: Dictionary) -> void:
 	office_storage_by_port = data.get("office_storage_by_port", {})
 	morale = int(data.get("morale", 0))
 	game_time_seconds = float(data.get("game_time_seconds", START_OF_DAY_SECONDS + max(0, day_count - 1) * GAME_SECONDS_PER_DAY))
+	current_weather = str(data.get("current_weather", WEATHER_SUNNY))
+	weather_cycle_index = int(data.get("weather_cycle_index", _get_weather_cycle_index()))
 	known_port_ids = Array(data.get("known_port_ids", []), TYPE_STRING, "", null)
 	ship_task_last_day = data.get("ship_task_last_day", {})
 	next_trip_chart_discount = float(data.get("next_trip_chart_discount", 0.0))
@@ -155,6 +167,9 @@ func load_from_dict(data: Dictionary) -> void:
 		known_port_ids = [current_port_id]
 	if not current_port_id in known_port_ids:
 		known_port_ids.append(current_port_id)
+	if current_weather.is_empty():
+		current_weather = WEATHER_SUNNY
+	_update_weather_state()
 	_normalize_morale()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
@@ -186,6 +201,7 @@ func advance_game_time_seconds(seconds: float) -> void:
 		return
 	game_time_seconds += seconds
 	_sync_day_count_from_time()
+	_update_weather_state()
 
 func advance_game_time_days(days: float) -> void:
 	if days <= 0.0:
@@ -195,6 +211,7 @@ func advance_game_time_days(days: float) -> void:
 func set_game_time_seconds(total_seconds: float) -> void:
 	game_time_seconds = max(0.0, total_seconds)
 	_sync_day_count_from_time()
+	_update_weather_state()
 
 func sleep_until_next_morning() -> void:
 	var current_day_index: int = int(floor(game_time_seconds / GAME_SECONDS_PER_DAY))
@@ -203,6 +220,24 @@ func sleep_until_next_morning() -> void:
 
 func _sync_day_count_from_time() -> void:
 	day_count = 1 + int(floor(game_time_seconds / GAME_SECONDS_PER_DAY))
+
+func _get_weather_cycle_index() -> int:
+	return int(floor((game_time_seconds - WEATHER_ROLLOVER_HOUR * 3600.0) / GAME_SECONDS_PER_DAY))
+
+func _update_weather_state() -> void:
+	var cycle_index: int = _get_weather_cycle_index()
+	if cycle_index != weather_cycle_index:
+		weather_cycle_index = cycle_index
+		_roll_weather_for_cycle(weather_cycle_index)
+
+func _roll_weather_for_cycle(_cycle_index: int) -> void:
+	var roll: float = randf()
+	if roll < 0.02:
+		current_weather = WEATHER_STORM
+	elif roll < 0.20:
+		current_weather = WEATHER_RAINY
+	else:
+		current_weather = WEATHER_SUNNY
 
 func get_time_of_day_seconds() -> int:
 	return int(fposmod(game_time_seconds, GAME_SECONDS_PER_DAY))
@@ -215,6 +250,21 @@ func get_clock_string() -> String:
 
 func get_day_and_time_string() -> String:
 	return "Day %d | %s" % [day_count, get_clock_string()]
+
+func get_weather_display_name() -> String:
+	match current_weather:
+		WEATHER_RAINY:
+			return "Rainy"
+		WEATHER_STORM:
+			return "Severe Storm"
+		_:
+			return "Sunny"
+
+func is_rainy_weather() -> bool:
+	return current_weather == WEATHER_RAINY
+
+func is_severe_storm_weather() -> bool:
+	return current_weather == WEATHER_STORM
 
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
