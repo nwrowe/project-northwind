@@ -24,6 +24,7 @@ func refresh_ui() -> void:
 		var empty_label := Label.new()
 		empty_label.text = "No dockside work is available right now. Try again later in the day."
 		empty_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		empty_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		jobs_list.add_child(empty_label)
 		return
 
@@ -33,12 +34,15 @@ func refresh_ui() -> void:
 func _add_job_row(job: Dictionary) -> void:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.custom_minimum_size = Vector2(0, 110)
 	var outer := HBoxContainer.new()
 	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	card.add_child(outer)
 
 	var info_box := VBoxContainer.new()
 	info_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info_box.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	outer.add_child(info_box)
 
 	var title := Label.new()
@@ -49,16 +53,21 @@ func _add_job_row(job: Dictionary) -> void:
 		(" | %d supply" % int(job.get("supplies", 0))) if int(job.get("supplies", 0)) > 0 else ""
 	]
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	info_box.add_child(title)
 
 	var detail := Label.new()
 	detail.text = "%s\n%s" % [str(job.get("description", "")), str(job.get("note", ""))]
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	detail.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	info_box.add_child(detail)
 
 	var button := Button.new()
 	button.text = "Work"
 	button.custom_minimum_size = Vector2(120, 52)
+	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.pressed.connect(_on_job_pressed.bind(str(job.get("id", ""))))
 	outer.add_child(button)
 
