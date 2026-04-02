@@ -20,6 +20,7 @@ var save_slot_dialog
 var balance_debug_visible: bool = false
 var dockside_work_button: Button
 var ship_home_button: Button
+var town_figures_button: Button
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
@@ -67,6 +68,7 @@ func _ready() -> void:
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
 	_ensure_dockside_work_button()
 	_ensure_ship_home_button()
+	_ensure_town_figures_button()
 
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
@@ -145,6 +147,9 @@ func refresh_ui() -> void:
 	ship_home_button.visible = GameState.current_ship_supports_personnel()
 	ship_home_button.disabled = not GameState.current_ship_supports_personnel()
 	ship_home_button.tooltip_text = "Your ship becomes accessible once you own a real vessel." if not GameState.current_ship_supports_personnel() else ""
+	town_figures_button.visible = true
+	town_figures_button.disabled = false
+	town_figures_button.tooltip_text = ""
 	_refresh_header_summary()
 
 func _apply_button_state(button: Button, disabled: bool, tooltip: String) -> void:
@@ -166,6 +171,14 @@ func _ensure_ship_home_button() -> void:
 	ship_home_button.custom_minimum_size = Vector2(0, 58)
 	ship_home_button.pressed.connect(_on_ship_home_pressed)
 	service_grid.add_child(ship_home_button)
+
+func _ensure_town_figures_button() -> void:
+	town_figures_button = Button.new()
+	town_figures_button.name = "TownFiguresButton"
+	town_figures_button.text = "Town Figures"
+	town_figures_button.custom_minimum_size = Vector2(0, 58)
+	town_figures_button.pressed.connect(_on_town_figures_pressed)
+	service_grid.add_child(town_figures_button)
 
 func _is_after_hours() -> bool:
 	var seconds_of_day: int = GameState.get_time_of_day_seconds()
@@ -229,6 +242,8 @@ func _on_dockside_work_pressed() -> void:
 	ScreenRouter.show_aurelia_bootstrap_screen()
 func _on_ship_home_pressed() -> void:
 	ScreenRouter.show_ship_screen()
+func _on_town_figures_pressed() -> void:
+	ScreenRouter.show_town_figures_screen()
 func _on_save_pressed() -> void:
 	save_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:
