@@ -6,6 +6,7 @@ var pending_round_action: String = ""
 const RUMOR_ROUND_COST := 4
 const NEW_FACES_COST := 6
 const CREW_ROUND_COST_BASE := 8
+const SLEEP_BASE_COST := 2
 
 @onready var header_label = $VBoxContainer/HeaderLabel
 @onready var intro_label = $VBoxContainer/IntroPanel/VBoxContainer/IntroLabel
@@ -28,6 +29,11 @@ func _ready() -> void:
 	crew_round_button.text = "Buy Crew Round"
 	crew_round_button.pressed.connect(_on_crew_round_pressed)
 	button_row.add_child(crew_round_button)
+	var sleep_button := Button.new()
+	sleep_button.name = "SleepButton"
+	sleep_button.text = "Sleep"
+	sleep_button.pressed.connect(_on_sleep_pressed)
+	button_row.add_child(sleep_button)
 	var confirm_button := Button.new()
 	confirm_button.name = "ConfirmRoundButton"
 	confirm_button.text = "Confirm"
@@ -49,12 +55,20 @@ func refresh_ui() -> void:
 	intro_label.text = tavern_system.get_tavern_intro()
 	keeper_label.text = "Host: %s" % tavern_system.get_tavernkeeper_name()
 	officer_summary_label.text = "Officers: %s" % " | ".join(tavern_system.get_officer_summary_lines())
-	crew_summary_label.text = "Crew: %d / %d | Money: %d | Morale: %d" % [GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.money, GameState.morale]
+	crew_summary_label.text = "Crew: %d / %d | Money: %d | Morale: %d | Time: %s" % [GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.money, GameState.morale, GameState.get_day_and_time_string()]
 	_refresh_recruits()
+	_update_button_states()
 
 func _refresh_recruits() -> void:
 	for child in recruit_list.get_children():
 		child.queue_free()
+	if not GameState.current_ship_supports_personnel():
+		var blocked_label := Label.new()
+		blocked_label.text = "This rowboat cannot take on crew or officers. If you want hands on deck, you will need to buy a larger ship first."
+		blocked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		blocked_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		recruit_list.add_child(blocked_label)
+		return
 	for candidate in tavern_system.get_candidates_for_current_port():
 		_add_candidate_row(candidate)
 
@@ -110,6 +124,18 @@ func _hire_candidate(candidate_id: String) -> void:
 	info_label.text = str(result.get("message", ""))
 	refresh_ui()
 
+func _update_button_states() -> void:
+	var supports_personnel: bool = GameState.current_ship_supports_personnel()
+	button_row.get_node("NewFacesButton").disabled = not supports_personnel
+	button_row.get_node("CrewRoundButton").disabled = not supports_personnel or GameState.crew_count <= 0
+	button_row.get_node("SleepButton").tooltip_text = "Sleep until 06:00 next morning for %d gold." % _get_sleep_cost()
+	if not supports_personnel:
+		button_row.get_node("NewFacesButton").tooltip_text = "The rowboat cannot take on new crew or officers."
+		button_row.get_node("CrewRoundButton").tooltip_text = "No crew can be assigned to the rowboat."
+	else:
+		button_row.get_node("NewFacesButton").tooltip_text = ""
+		button_row.get_node("CrewRoundButton").tooltip_text = ""
+
 func _on_new_rumor_pressed() -> void:
 	_request_round("rumor")
 
@@ -119,7 +145,13 @@ func _on_new_faces_pressed() -> void:
 func _on_crew_round_pressed() -> void:
 	_request_round("crew")
 
+func _on_sleep_pressed() -> void:
+	_request_round("sleep")
+
 func _request_round(action: String) -> void:
+	if action != "rumor" and action != "sleep" and not GameState.current_ship_supports_personnel():
+		info_label.text = "The rowboat cannot support crew or officers."
+		return
 	var cost: int = _get_round_cost(action)
 	if GameState.money < cost:
 		info_label.text = "Not enough gold to pay for that round."
@@ -127,16 +159,23 @@ func _request_round(action: String) -> void:
 	pending_round_action = action
 	if action == "crew":
 		info_label.text = "Spend %d gold to lift crew morale?" % cost
+	elif action == "sleep":
+		info_label.text = "Spend %d gold to sleep until 06:00 tomorrow?" % cost
 	else:
 		info_label.text = "Spend %d gold to buy a round?" % cost
 	button_row.get_node("ConfirmRoundButton").visible = true
 	button_row.get_node("CancelRoundButton").visible = true
+
+func _get_sleep_cost() -> int:
+	return SLEEP_BASE_COST + GameState.crew_count
 
 func _get_round_cost(action: String) -> int:
 	if action == "rumor":
 		return RUMOR_ROUND_COST
 	if action == "faces":
 		return NEW_FACES_COST
+	if action == "sleep":
+		return _get_sleep_cost()
 	return CREW_ROUND_COST_BASE + int(ceil(float(GameState.crew_count) / 2.0))
 
 func _on_confirm_round_pressed() -> void:
@@ -154,6 +193,10 @@ func _on_confirm_round_pressed() -> void:
 	elif pending_round_action == "faces":
 		var result: Dictionary = tavern_system.reroll_candidates_for_current_port()
 		info_label.text = "%s (-%d gold)" % [str(result.get("message", "")), cost]
+	elif pending_round_action == "sleep":
+		GameState.sleep_until_next_morning()
+		GameState.recover_morale_in_port(6)
+		info_label.text = "You sleep through the night and wake at 06:00, a little steadier. (-%d gold)" % cost
 	else:
 		GameState.recover_morale_in_port(12 + int(floor(float(GameState.get_effective_command_rating()) / 2.0)))
 		info_label.text = "The crew relaxes, morale rises, and the tavern rings with song. (-%d gold)" % cost

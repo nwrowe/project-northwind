@@ -4,6 +4,7 @@ var contract_system := ContractSystem.new()
 var climate_system := ClimateSystem.new()
 
 const SAVE_SLOT_DIALOG_SCENE := preload("res://scenes/ui/SaveSlotDialog.tscn")
+const HOME_PORT_ID := "aurelia"
 
 const PORT_FLAVOR = {
 	"aurelia": {"overview": "Aurelia is a calm starter harbor where traders swap staples and gossip under sun-faded awnings.", "npc": "Maris the Dock Clerk keeps ledgers on every captain and always knows which routes are safest this week."},
@@ -33,17 +34,20 @@ var balance_debug_visible: bool = false
 @onready var balance_debug_panel = $VBoxContainer/BalanceDebugPanel
 @onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer/BalanceDebugLabel
 @onready var balance_debug_toggle_button = $VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton
+@onready var contracts_button = $VBoxContainer/ServicePanel/GridContainer/ContractsButton
+@onready var office_button = $VBoxContainer/ServicePanel/GridContainer/OfficeButton
+@onready var upgrade_button = $VBoxContainer/ServicePanel/GridContainer/UpgradeButton
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/ContractsButton.pressed.connect(_on_contracts_pressed)
+	contracts_button.pressed.connect(_on_contracts_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/OfficeButton.pressed.connect(_on_office_pressed)
+	office_button.pressed.connect(_on_office_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
+	upgrade_button.pressed.connect(_on_upgrade_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
@@ -72,6 +76,7 @@ func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
 	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
+	var is_home_port: bool = GameState.current_port_id == HOME_PORT_ID
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
@@ -85,6 +90,12 @@ func refresh_ui() -> void:
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
 	contract_summary_label.text = _build_contract_summary()
 	balance_debug_label.text = GameState.get_balance_debug_report()
+	upgrade_button.disabled = is_home_port or not GameState.current_ship_can_install_upgrades()
+	upgrade_button.tooltip_text = "Aurelia is too small to support an outfitter." if is_home_port else ("The rowboat cannot take ship upgrades." if upgrade_button.disabled else "")
+	contracts_button.disabled = is_home_port
+	contracts_button.tooltip_text = "Aurelia is too small to host a harbormaster." if is_home_port else ""
+	office_button.disabled = is_home_port
+	office_button.tooltip_text = "Aurelia has no harbor office." if is_home_port else ""
 	_refresh_header_summary()
 
 func _refresh_header_summary() -> void:
@@ -100,6 +111,8 @@ func _build_contract_summary() -> String:
 	var available: int = contract_system.get_available_contracts_for_current_port().size()
 	var active: Array = contract_system.get_active_contracts()
 	var completable: int = contract_system.get_completable_contracts_for_current_port().size()
+	if GameState.current_port_id == HOME_PORT_ID:
+		return "Aurelia is a small home port with only basic services."
 	if active.is_empty():
 		return "Harbormaster: %d contracts available | No active jobs | Total trip costs %d" % [available, GameState.get_total_upkeep_due()]
 	var nearest_deadline: int = 9999
