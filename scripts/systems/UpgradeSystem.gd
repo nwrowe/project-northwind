@@ -2,6 +2,8 @@ class_name UpgradeSystem
 extends RefCounted
 
 func get_available_upgrades() -> Array:
+	if not GameState.current_ship_can_install_upgrades():
+		return []
 	var results: Array = []
 	for upgrade in GameData.upgrades_list:
 		if not GameState.has_upgrade(upgrade.get("id", "")):
@@ -9,6 +11,8 @@ func get_available_upgrades() -> Array:
 	return results
 
 func can_buy_upgrade(upgrade_id: String) -> bool:
+	if not GameState.current_ship_can_install_upgrades():
+		return false
 	var upgrade := GameData.get_upgrade(upgrade_id)
 	if upgrade.is_empty():
 		return false
@@ -17,6 +21,8 @@ func can_buy_upgrade(upgrade_id: String) -> bool:
 	return GameState.money >= int(upgrade.get("cost", 0))
 
 func buy_upgrade(upgrade_id: String) -> Dictionary:
+	if not GameState.current_ship_can_install_upgrades():
+		return {"success": false, "message": "This rowboat cannot install harbor upgrades."}
 	if not can_buy_upgrade(upgrade_id):
 		return {"success": false, "message": "Cannot buy upgrade."}
 
