@@ -41,6 +41,13 @@ var debug_event_income_total: int = 0
 func _process(delta: float) -> void:
 	advance_game_time_seconds(delta * GAME_SECONDS_PER_REAL_SECOND)
 
+var recent_trip_reports: Array = []
+var morale_history: Array[int] = []
+var debug_contract_success_count: int = 0
+var debug_contract_expiry_count: int = 0
+var debug_contract_income_total: int = 0
+var debug_event_income_total: int = 0
+
 func new_game() -> void:
 	current_port_id = "aurelia"
 	money = 150

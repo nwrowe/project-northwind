@@ -69,6 +69,7 @@ func complete_contract(contract_id: String) -> Dictionary:
 	GameState.active_contracts.remove_at(active_index)
 	if not contract_id in GameState.completed_contract_ids:
 		GameState.completed_contract_ids.append(contract_id)
+	GameState.record_contract_completed(payout_total)
 	return {"success": true, "message": "Contract fulfilled! Sold for %d and received %d bonus. Total %d." % [sell_value, delivery_bonus, payout_total], "reward": payout_total, "contract_id": contract_id}
 
 func resolve_contracts_on_arrival() -> Dictionary:
@@ -171,6 +172,7 @@ func _expire_contract(contract_id: String) -> void:
 	var index: int = _find_active_index(contract_id)
 	if index >= 0:
 		GameState.active_contracts.remove_at(index)
+		GameState.record_contract_expired()
 
 func _find_active_index(contract_id: String) -> int:
 	for i in range(GameState.active_contracts.size()):
