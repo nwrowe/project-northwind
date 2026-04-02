@@ -1,0 +1,98 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/TownFiguresScreen.gd" id="1"]
+
+[node name="TownFiguresScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HeaderLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Town Figures"
+
+[node name="SummaryPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/SummaryPanel"]
+layout_mode = 2
+
+[node name="SummaryLabel" type="Label" parent="VBoxContainer/SummaryPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+text = ""
+
+[node name="ResidentsPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ResidentsPanel"]
+layout_mode = 2
+
+[node name="SectionLabel" type="Label" parent="VBoxContainer/ResidentsPanel/VBoxContainer"]
+layout_mode = 2
+text = "Business Residents"
+
+[node name="ResidentsScroll" type="ScrollContainer" parent="VBoxContainer/ResidentsPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/ResidentsPanel/VBoxContainer/ResidentsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ResidentsList" type="VBoxContainer" parent="VBoxContainer/ResidentsPanel/VBoxContainer/ResidentsScroll/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NotablesPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/NotablesPanel"]
+layout_mode = 2
+
+[node name="SectionLabel" type="Label" parent="VBoxContainer/NotablesPanel/VBoxContainer"]
+layout_mode = 2
+text = "Notable Figures"
+
+[node name="NotablesScroll" type="ScrollContainer" parent="VBoxContainer/NotablesPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/NotablesPanel/VBoxContainer/NotablesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NotablesList" type="VBoxContainer" parent="VBoxContainer/NotablesPanel/VBoxContainer/NotablesScroll/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FooterPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/FooterPanel"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="VBoxContainer/FooterPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3
+text = ""
+
+[node name="BackButton" type="Button" parent="VBoxContainer/FooterPanel/VBoxContainer"]
+layout_mode = 2
+text = "Back"
