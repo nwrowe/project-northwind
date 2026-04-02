@@ -20,7 +20,7 @@ var completed_contract_ids: Array[String] = []
 var pending_status_message: String = ""
 
 var reserve_ship_ids: Array[String] = []
-var crew_count: int = 4
+var crew_count: int = 0
 var officer_assignments: Dictionary = {}
 var trust_rating: int = 0
 var infamy_rating: int = 0
@@ -31,9 +31,6 @@ var office_storage_by_port: Dictionary = {}
 var morale: int = 70
 var game_time_seconds: float = START_OF_DAY_SECONDS
 
-func _process(delta: float) -> void:
-	advance_game_time_seconds(delta * GAME_SECONDS_PER_REAL_SECOND)
-
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
 var debug_contract_success_count: int = 0
@@ -41,10 +38,13 @@ var debug_contract_expiry_count: int = 0
 var debug_contract_income_total: int = 0
 var debug_event_income_total: int = 0
 
+func _process(delta: float) -> void:
+	advance_game_time_seconds(delta * GAME_SECONDS_PER_REAL_SECOND)
+
 func new_game() -> void:
 	current_port_id = "aurelia"
 	money = 150
-	ship_id = "coastal_sloop"
+	ship_id = "rowboat"
 	owned_upgrades = []
 	ship_durability = get_effective_max_durability()
 	supplies = 8
@@ -54,7 +54,7 @@ func new_game() -> void:
 	completed_contract_ids = []
 	pending_status_message = ""
 	reserve_ship_ids = []
-	crew_count = 4
+	crew_count = 0
 	officer_assignments = {}
 	trust_rating = 0
 	infamy_rating = 0
@@ -107,7 +107,7 @@ func to_dict() -> Dictionary:
 func load_from_dict(data: Dictionary) -> void:
 	current_port_id = data.get("current_port_id", "aurelia")
 	money = int(data.get("money", 150))
-	ship_id = data.get("ship_id", "coastal_sloop")
+	ship_id = data.get("ship_id", "rowboat")
 	ship_durability = int(data.get("ship_durability", 100))
 	supplies = int(data.get("supplies", 8))
 	cargo = data.get("cargo", {})
@@ -117,7 +117,7 @@ func load_from_dict(data: Dictionary) -> void:
 	completed_contract_ids = Array(data.get("completed_contract_ids", []), TYPE_STRING, "", null)
 	pending_status_message = ""
 	reserve_ship_ids = Array(data.get("reserve_ship_ids", []), TYPE_STRING, "", null)
-	crew_count = int(data.get("crew_count", 4))
+	crew_count = int(data.get("crew_count", 0))
 	officer_assignments = data.get("officer_assignments", {})
 	trust_rating = int(data.get("trust_rating", 0))
 	infamy_rating = int(data.get("infamy_rating", 0))
@@ -136,6 +136,9 @@ func load_from_dict(data: Dictionary) -> void:
 	if morale_history.is_empty():
 		_record_morale_snapshot()
 	_sync_day_count_from_time()
+	crew_count = min(crew_count, get_effective_crew_capacity())
+	if not current_ship_supports_personnel():
+		officer_assignments = {}
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -190,6 +193,12 @@ func get_day_and_time_string() -> String:
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
 
+func current_ship_supports_personnel() -> bool:
+	return bool(get_ship_def().get("supports_personnel", true))
+
+func current_ship_can_install_upgrades() -> bool:
+	return bool(get_ship_def().get("can_install_upgrades", true))
+
 func _get_upgrade_bonus_int(key: String) -> int:
 	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
@@ -223,9 +232,9 @@ func get_effective_evasion() -> int:
 func get_effective_intimidation() -> int:
 	return max(0, int(get_ship_def().get("intimidation", 0)) + _get_upgrade_bonus_int("intimidation_bonus"))
 func get_effective_crew_capacity() -> int:
-	return max(1, int(get_ship_def().get("crew_capacity", 0)) + _get_upgrade_bonus_int("crew_capacity_bonus"))
+	return max(0, int(get_ship_def().get("crew_capacity", 0)) + _get_upgrade_bonus_int("crew_capacity_bonus"))
 func get_effective_officer_slots() -> int:
-	return max(1, int(get_ship_def().get("officer_slots", 0)) + _get_upgrade_bonus_int("officer_slots_bonus"))
+	return max(0, int(get_ship_def().get("officer_slots", 0)) + _get_upgrade_bonus_int("officer_slots_bonus"))
 func get_effective_boarding_strength() -> int:
 	return max(0, int(get_ship_def().get("boarding_strength", 0)) + _get_upgrade_bonus_int("boarding_strength_bonus"))
 
@@ -307,7 +316,7 @@ func apply_crew_loss(loss: int) -> int:
 	if loss <= 0:
 		return 0
 	var previous: int = crew_count
-	crew_count = max(1, crew_count - loss)
+	crew_count = max(0, crew_count - loss)
 	change_morale(-loss * 2)
 	return previous - crew_count
 

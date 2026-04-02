@@ -33,6 +33,7 @@ var balance_debug_visible: bool = false
 @onready var balance_debug_panel = $VBoxContainer/BalanceDebugPanel
 @onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer/BalanceDebugLabel
 @onready var balance_debug_toggle_button = $VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton
+@onready var upgrade_button = $VBoxContainer/ServicePanel/GridContainer/UpgradeButton
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
@@ -43,7 +44,7 @@ func _ready() -> void:
 	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/UpgradeButton.pressed.connect(_on_upgrade_pressed)
+	upgrade_button.pressed.connect(_on_upgrade_pressed)
 	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
@@ -85,6 +86,8 @@ func refresh_ui() -> void:
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
 	contract_summary_label.text = _build_contract_summary()
 	balance_debug_label.text = GameState.get_balance_debug_report()
+	upgrade_button.disabled = not GameState.current_ship_can_install_upgrades()
+	upgrade_button.tooltip_text = "The rowboat cannot take ship upgrades." if upgrade_button.disabled else ""
 	_refresh_header_summary()
 
 func _refresh_header_summary() -> void:
