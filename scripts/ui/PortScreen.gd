@@ -31,7 +31,7 @@ var balance_debug_visible: bool = false
 @onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
 @onready var balance_debug_panel = $VBoxContainer/BalanceDebugPanel
-@onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/BalanceDebugLabel
+@onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer/BalanceDebugLabel
 @onready var balance_debug_toggle_button = $VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
@@ -63,12 +63,16 @@ func _ready() -> void:
 		action_status_label.text = GameState.pending_status_message
 		GameState.pending_status_message = ""
 
+func _process(_delta: float) -> void:
+	_refresh_header_summary()
+	if balance_debug_visible:
+		balance_debug_label.text = GameState.get_balance_debug_report()
+
 func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
 	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
-	day_money_label.text = "Day %d | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.day_count, GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
 	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d | Wages due %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion(), GameState.get_crew_wages_due() + GameState.get_officer_wages_due()]
@@ -81,6 +85,10 @@ func refresh_ui() -> void:
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
 	contract_summary_label.text = _build_contract_summary()
 	balance_debug_label.text = GameState.get_balance_debug_report()
+	_refresh_header_summary()
+
+func _refresh_header_summary() -> void:
+	day_money_label.text = "%s | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.get_day_and_time_string(), GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
 
 func _cargo_parts() -> Array[String]:
 	var parts: Array[String] = []

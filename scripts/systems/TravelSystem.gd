@@ -36,7 +36,7 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 
 	GameState.supplies -= supply_cost
 	var trip_costs: Dictionary = GameState.process_trip_costs()
-	GameState.day_count += int(route.get("distance", 1))
+	GameState.advance_game_time_days(float(route.get("distance", 1)))
 	GameState.current_port_id = str(route.get("to", GameState.current_port_id))
 	var destination_port_id: String = GameState.current_port_id
 	var destination: Dictionary = GameData.get_port(destination_port_id)

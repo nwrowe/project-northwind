@@ -2,6 +2,10 @@ extends Node
 
 const RECENT_TRIP_LIMIT := 12
 const RECENT_MORALE_LIMIT := 24
+const GAME_SECONDS_PER_DAY := 86400.0
+const REAL_SECONDS_PER_GAME_DAY := 900.0
+const GAME_SECONDS_PER_REAL_SECOND := GAME_SECONDS_PER_DAY / REAL_SECONDS_PER_GAME_DAY
+const START_OF_DAY_SECONDS := 8.0 * 3600.0
 
 var current_port_id: String = ""
 var money: int = 0
@@ -25,6 +29,17 @@ var market_trade_log: Array = []
 var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
 var morale: int = 70
+var game_time_seconds: float = START_OF_DAY_SECONDS
+
+var recent_trip_reports: Array = []
+var morale_history: Array[int] = []
+var debug_contract_success_count: int = 0
+var debug_contract_expiry_count: int = 0
+var debug_contract_income_total: int = 0
+var debug_event_income_total: int = 0
+
+func _process(delta: float) -> void:
+	advance_game_time_seconds(delta * GAME_SECONDS_PER_REAL_SECOND)
 
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
@@ -55,6 +70,7 @@ func new_game() -> void:
 	office_member = false
 	office_storage_by_port = {}
 	morale = 70
+	game_time_seconds = START_OF_DAY_SECONDS
 	recent_trip_reports = []
 	morale_history = []
 	debug_contract_success_count = 0
@@ -62,6 +78,7 @@ func new_game() -> void:
 	debug_contract_income_total = 0
 	debug_event_income_total = 0
 	_record_morale_snapshot()
+	_sync_day_count_from_time()
 
 func to_dict() -> Dictionary:
 	return {
@@ -85,6 +102,7 @@ func to_dict() -> Dictionary:
 		"office_member": office_member,
 		"office_storage_by_port": office_storage_by_port,
 		"morale": morale,
+		"game_time_seconds": game_time_seconds,
 		"recent_trip_reports": recent_trip_reports,
 		"morale_history": morale_history,
 		"debug_contract_success_count": debug_contract_success_count,
@@ -115,6 +133,7 @@ func load_from_dict(data: Dictionary) -> void:
 	office_member = bool(data.get("office_member", false))
 	office_storage_by_port = data.get("office_storage_by_port", {})
 	morale = int(data.get("morale", 70))
+	game_time_seconds = float(data.get("game_time_seconds", START_OF_DAY_SECONDS + max(0, day_count - 1) * GAME_SECONDS_PER_DAY))
 	recent_trip_reports = data.get("recent_trip_reports", [])
 	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
 	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
@@ -123,6 +142,7 @@ func load_from_dict(data: Dictionary) -> void:
 	debug_event_income_total = int(data.get("debug_event_income_total", 0))
 	if morale_history.is_empty():
 		_record_morale_snapshot()
+	_sync_day_count_from_time()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -147,6 +167,32 @@ func _normalize_active_contracts(raw_contracts: Array) -> Array:
 				"delivery_bonus": int(entry.get("delivery_bonus", 0)),
 			})
 	return normalized
+
+func advance_game_time_seconds(seconds: float) -> void:
+	if seconds <= 0.0:
+		return
+	game_time_seconds += seconds
+	_sync_day_count_from_time()
+
+func advance_game_time_days(days: float) -> void:
+	if days <= 0.0:
+		return
+	advance_game_time_seconds(days * GAME_SECONDS_PER_DAY)
+
+func _sync_day_count_from_time() -> void:
+	day_count = 1 + int(floor(game_time_seconds / GAME_SECONDS_PER_DAY))
+
+func get_time_of_day_seconds() -> int:
+	return int(fposmod(game_time_seconds, GAME_SECONDS_PER_DAY))
+
+func get_clock_string() -> String:
+	var seconds_of_day: int = get_time_of_day_seconds()
+	var hours: int = int(seconds_of_day / 3600)
+	var minutes: int = int((seconds_of_day % 3600) / 60)
+	return "%02d:%02d" % [hours, minutes]
+
+func get_day_and_time_string() -> String:
+	return "Day %d | %s" % [day_count, get_clock_string()]
 
 func get_ship_def() -> Dictionary:
 	return GameData.get_ship(ship_id)
@@ -349,9 +395,7 @@ func get_balance_debug_report() -> String:
 	var good_entries: Array[Dictionary] = []
 	for good_id in profit_by_good.keys():
 		good_entries.append({"good_id": str(good_id), "profit": int(profit_by_good[good_id])})
-	good_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return int(a.get("profit", 0)) > int(b.get("profit", 0))
-	)
+	good_entries.sort_custom(_sort_good_entries_desc)
 	if good_entries.is_empty():
 		lines.append("Top goods: no realized trade data yet")
 	else:
@@ -364,6 +408,9 @@ func get_balance_debug_report() -> String:
 		lines.append("Top goods: %s" % ", ".join(parts))
 
 	return "\n".join(lines)
+
+func _sort_good_entries_desc(a: Dictionary, b: Dictionary) -> bool:
+	return int(a.get("profit", 0)) > int(b.get("profit", 0))
 
 func _record_morale_snapshot() -> void:
 	morale_history.append(morale)
