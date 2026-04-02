@@ -5,6 +5,8 @@ var climate_system := ClimateSystem.new()
 
 const SAVE_SLOT_DIALOG_SCENE := preload("res://scenes/ui/SaveSlotDialog.tscn")
 const HOME_PORT_ID := "aurelia"
+const BUSINESS_OPEN_HOUR := 6
+const BUSINESS_CLOSE_HOUR := 22
 
 const PORT_FLAVOR = {
 	"aurelia": {"overview": "Aurelia is a calm starter harbor where traders swap staples and gossip under sun-faded awnings.", "npc": "Maris the Dock Clerk keeps ledgers on every captain and always knows which routes are safest this week."},
@@ -35,22 +37,28 @@ var dockside_work_button: Button
 @onready var balance_debug_panel = $VBoxContainer/BalanceDebugPanel
 @onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer/BalanceDebugLabel
 @onready var balance_debug_toggle_button = $VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton
+@onready var market_button = $VBoxContainer/ServicePanel/GridContainer/MarketButton
 @onready var contracts_button = $VBoxContainer/ServicePanel/GridContainer/ContractsButton
+@onready var tavern_button = $VBoxContainer/ServicePanel/GridContainer/TavernButton
 @onready var office_button = $VBoxContainer/ServicePanel/GridContainer/OfficeButton
+@onready var shipyard_button = $VBoxContainer/ServicePanel/GridContainer/ShipyardButton
+@onready var repair_button = $VBoxContainer/ServicePanel/GridContainer/RepairButton
+@onready var resupply_button = $VBoxContainer/ServicePanel/GridContainer/ResupplyButton
 @onready var upgrade_button = $VBoxContainer/ServicePanel/GridContainer/UpgradeButton
+@onready var travel_button = $VBoxContainer/ServicePanel/GridContainer/TravelButton
 @onready var service_grid = $VBoxContainer/ServicePanel/GridContainer
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
-	$VBoxContainer/ServicePanel/GridContainer/MarketButton.pressed.connect(_on_market_pressed)
+	market_button.pressed.connect(_on_market_pressed)
 	contracts_button.pressed.connect(_on_contracts_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/TavernButton.pressed.connect(_on_tavern_pressed)
+	tavern_button.pressed.connect(_on_tavern_pressed)
 	office_button.pressed.connect(_on_office_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/ShipyardButton.pressed.connect(_on_shipyard_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/RepairButton.pressed.connect(_on_repair_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/ResupplyButton.pressed.connect(_on_resupply_pressed)
+	shipyard_button.pressed.connect(_on_shipyard_pressed)
+	repair_button.pressed.connect(_on_repair_pressed)
+	resupply_button.pressed.connect(_on_resupply_pressed)
 	upgrade_button.pressed.connect(_on_upgrade_pressed)
-	$VBoxContainer/ServicePanel/GridContainer/TravelButton.pressed.connect(_on_travel_pressed)
+	travel_button.pressed.connect(_on_travel_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
@@ -80,6 +88,7 @@ func refresh_ui() -> void:
 	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
 	var is_home_port: bool = GameState.current_port_id == HOME_PORT_ID
+	var after_hours: bool = _is_after_hours()
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
@@ -93,14 +102,49 @@ func refresh_ui() -> void:
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
 	contract_summary_label.text = _build_contract_summary()
 	balance_debug_label.text = GameState.get_balance_debug_report()
-	upgrade_button.disabled = is_home_port or not GameState.current_ship_can_install_upgrades()
-	upgrade_button.tooltip_text = "Aurelia is too small to support an outfitter." if is_home_port else ("The rowboat cannot take ship upgrades." if upgrade_button.disabled else "")
-	contracts_button.disabled = is_home_port
-	contracts_button.tooltip_text = "Aurelia is too small to host a harbormaster." if is_home_port else ""
-	office_button.disabled = is_home_port
-	office_button.tooltip_text = "Aurelia has no harbor office." if is_home_port else ""
+
+	_apply_button_state(market_button, after_hours, "The market is closed until 06:00.")
+	_apply_button_state(shipyard_button, after_hours, "The shipyard is closed until 06:00.")
+	_apply_button_state(repair_button, after_hours, "The repair dock is closed until 06:00.")
+	_apply_button_state(resupply_button, after_hours, "The chandlery is closed until 06:00.")
+	_apply_button_state(dockside_work_button, after_hours, "Dockside work is only posted during daylight business hours.")
+
+	upgrade_button.disabled = is_home_port or after_hours or not GameState.current_ship_can_install_upgrades()
+	if is_home_port:
+		upgrade_button.tooltip_text = "Aurelia is too small to support an outfitter."
+	elif after_hours:
+		upgrade_button.tooltip_text = "The outfitter is closed until 06:00."
+	elif not GameState.current_ship_can_install_upgrades():
+		upgrade_button.tooltip_text = "The rowboat cannot take ship upgrades."
+	else:
+		upgrade_button.tooltip_text = ""
+
+	contracts_button.disabled = is_home_port or after_hours
+	if is_home_port:
+		contracts_button.tooltip_text = "Aurelia is too small to host a harbormaster."
+	elif after_hours:
+		contracts_button.tooltip_text = "The harbormaster closes for the night at 22:00."
+	else:
+		contracts_button.tooltip_text = ""
+
+	office_button.disabled = is_home_port or after_hours
+	if is_home_port:
+		office_button.tooltip_text = "Aurelia has no harbor office."
+	elif after_hours:
+		office_button.tooltip_text = "The harbor office is closed until 06:00."
+	else:
+		office_button.tooltip_text = ""
+
+	tavern_button.disabled = false
+	tavern_button.tooltip_text = ""
+	travel_button.disabled = false
+	travel_button.tooltip_text = ""
 	dockside_work_button.visible = is_home_port
 	_refresh_header_summary()
+
+func _apply_button_state(button: Button, disabled: bool, tooltip: String) -> void:
+	button.disabled = disabled
+	button.tooltip_text = tooltip if disabled else ""
 
 func _ensure_dockside_work_button() -> void:
 	dockside_work_button = Button.new()
@@ -109,6 +153,11 @@ func _ensure_dockside_work_button() -> void:
 	dockside_work_button.custom_minimum_size = Vector2(0, 58)
 	dockside_work_button.pressed.connect(_on_dockside_work_pressed)
 	service_grid.add_child(dockside_work_button)
+
+func _is_after_hours() -> bool:
+	var seconds_of_day: int = GameState.get_time_of_day_seconds()
+	var hour: int = int(seconds_of_day / 3600)
+	return hour < BUSINESS_OPEN_HOUR or hour >= BUSINESS_CLOSE_HOUR
 
 func _refresh_header_summary() -> void:
 	day_money_label.text = "%s | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.get_day_and_time_string(), GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
