@@ -41,6 +41,8 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 	var destination_port_id: String = GameState.current_port_id
 	var destination: Dictionary = GameData.get_port(destination_port_id)
 
+	var destination_port_id: String = GameState.current_port_id
+	var destination: Dictionary = GameData.get_port(destination_port_id)
 	var event_payload: Dictionary = event_system.roll_event(float(route.get("risk", 0.0)))
 	var triggered: bool = bool(event_payload.get("triggered", false))
 	var contract_result: Dictionary = contract_system.resolve_contracts_on_arrival()
@@ -72,7 +74,10 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 
 	return {
 		"success": true,
-		"destination_port_id": GameState.current_port_id,
+		"from_port_id": from_port_id,
+		"destination_port_id": destination_port_id,
+		"route_id": str(route.get("id", "")),
+		"route_distance": int(route.get("distance", 1)),
 		"supply_cost": supply_cost,
 		"trip_costs": trip_costs,
 		"event_triggered": triggered,
