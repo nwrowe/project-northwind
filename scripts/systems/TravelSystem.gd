@@ -31,17 +31,36 @@ func travel(route_id: String) -> Dictionary:
 func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 	var from_port_id: String = GameState.current_port_id
 	var from_port: Dictionary = GameData.get_port(from_port_id)
+	var start_money: int = GameState.money
+	var start_morale: int = GameState.morale
 
 	GameState.supplies -= supply_cost
 	var trip_costs: Dictionary = GameState.process_trip_costs()
 	GameState.day_count += int(route.get("distance", 1))
 	GameState.current_port_id = str(route.get("to", GameState.current_port_id))
+	var destination_port_id: String = GameState.current_port_id
+	var destination: Dictionary = GameData.get_port(destination_port_id)
 
 	var destination_port_id: String = GameState.current_port_id
 	var destination: Dictionary = GameData.get_port(destination_port_id)
 	var event_payload: Dictionary = event_system.roll_event(float(route.get("risk", 0.0)))
 	var triggered: bool = bool(event_payload.get("triggered", false))
 	var contract_result: Dictionary = contract_system.resolve_contracts_on_arrival()
+
+	GameState.record_trip_report({
+		"day": GameState.day_count,
+		"route_id": str(route.get("id", "")),
+		"from_port_id": from_port_id,
+		"from_port_name": str(from_port.get("name", from_port_id)),
+		"to_port_id": destination_port_id,
+		"to_port_name": str(destination.get("name", destination_port_id)),
+		"money_before": start_money,
+		"money_after": GameState.money,
+		"money_delta": GameState.money - start_money,
+		"morale_before": start_morale,
+		"morale_after": GameState.morale,
+		"upkeep_paid": int(trip_costs.get("paid", 0)),
+	})
 
 	var arrival_summary: String = _build_arrival_summary(
 		from_port.get("name", from_port_id),
