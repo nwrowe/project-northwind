@@ -123,7 +123,7 @@ func _on_continue_pressed() -> void:
 	if not transition_armed:
 		return
 	GameState.current_port_id = "aurelia"
-	GameState.pending_status_message = "You reach Aurelia soaked, nameless, and broke. Maris points you toward Dockside Work if you want your first real stake."
+	GameState.pending_status_message = "You reach Aurelia soaked, nameless, and broke. Maris sends you toward the Lantern Cup, where there is at least a dry room waiting for the night."
 	ScreenRouter.show_port_screen()
 
 func _is_near(node: Control) -> bool:

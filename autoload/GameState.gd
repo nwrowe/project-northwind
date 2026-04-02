@@ -39,6 +39,10 @@ var weather_cycle_index: int = 0
 var known_port_ids: Array[String] = []
 var ship_task_last_day: Dictionary = {}
 var next_trip_chart_discount: float = 0.0
+var free_inn_nights: int = 0
+var inn_supply_story_stage: String = ""
+var inn_supply_order: Dictionary = {}
+var inn_supply_runs_completed: int = 0
 
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
@@ -78,6 +82,10 @@ func new_game() -> void:
 	known_port_ids = ["aurelia"]
 	ship_task_last_day = {}
 	next_trip_chart_discount = 0.0
+	free_inn_nights = 0
+	inn_supply_story_stage = "inn_intro_available"
+	inn_supply_order = {}
+	inn_supply_runs_completed = 0
 	recent_trip_reports = []
 	morale_history = []
 	debug_contract_success_count = 0
@@ -115,6 +123,10 @@ func to_dict() -> Dictionary:
 		"known_port_ids": known_port_ids,
 		"ship_task_last_day": ship_task_last_day,
 		"next_trip_chart_discount": next_trip_chart_discount,
+		"free_inn_nights": free_inn_nights,
+		"inn_supply_story_stage": inn_supply_story_stage,
+		"inn_supply_order": inn_supply_order,
+		"inn_supply_runs_completed": inn_supply_runs_completed,
 		"recent_trip_reports": recent_trip_reports,
 		"morale_history": morale_history,
 		"debug_contract_success_count": debug_contract_success_count,
@@ -151,6 +163,10 @@ func load_from_dict(data: Dictionary) -> void:
 	known_port_ids = Array(data.get("known_port_ids", []), TYPE_STRING, "", null)
 	ship_task_last_day = data.get("ship_task_last_day", {})
 	next_trip_chart_discount = float(data.get("next_trip_chart_discount", 0.0))
+	free_inn_nights = int(data.get("free_inn_nights", 0))
+	inn_supply_story_stage = str(data.get("inn_supply_story_stage", ""))
+	inn_supply_order = data.get("inn_supply_order", {})
+	inn_supply_runs_completed = int(data.get("inn_supply_runs_completed", 0))
 	recent_trip_reports = data.get("recent_trip_reports", [])
 	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
 	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
@@ -169,6 +185,8 @@ func load_from_dict(data: Dictionary) -> void:
 		known_port_ids.append(current_port_id)
 	if current_weather.is_empty():
 		current_weather = WEATHER_SUNNY
+	if inn_supply_story_stage.is_empty() and current_port_id == "aurelia" and ship_id == "rowboat" and inn_supply_runs_completed == 0:
+		inn_supply_story_stage = "inn_intro_available"
 	_update_weather_state()
 	_normalize_morale()
 

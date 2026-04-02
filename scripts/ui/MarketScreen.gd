@@ -1,12 +1,16 @@
 extends Control
 
 var market_system := MarketSystem.new()
+var starter_story_system := StarterStorySystem.new()
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var money_cargo_label = $VBoxContainer/HeaderPanel/VBoxContainer/MoneyCargoLabel
 @onready var goods_list = $VBoxContainer/GoodsScroll/VBoxContainer/GoodsList
 @onready var footer_row = $VBoxContainer/FooterPanel/HBoxContainer
 @onready var info_label = $VBoxContainer/FooterPanel/HBoxContainer/InfoLabel
+@onready var header_box = $VBoxContainer/HeaderPanel/VBoxContainer
+
+var story_hint_label: Label
 
 func _ready() -> void:
 	$VBoxContainer/FooterPanel/HBoxContainer/BackButton.pressed.connect(_on_back_pressed)
@@ -14,12 +18,18 @@ func _ready() -> void:
 	log_button.text = "Log Book"
 	log_button.pressed.connect(_on_log_book_pressed)
 	footer_row.add_child(log_button)
+	story_hint_label = Label.new()
+	story_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	story_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	header_box.add_child(story_hint_label)
 	refresh_ui()
 
 func refresh_ui() -> void:
 	var port := GameData.get_port(GameState.current_port_id)
 	port_name_label.text = port.get("name", "Market")
 	money_cargo_label.text = "Money: %d   Cargo: %d / %d" % [GameState.money, GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity()]
+	story_hint_label.text = starter_story_system.get_market_story_hint()
+	story_hint_label.visible = not story_hint_label.text.is_empty()
 	for child in goods_list.get_children():
 		child.queue_free()
 	for good in GameData.goods_list:
