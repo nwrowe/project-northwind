@@ -28,8 +28,11 @@ var tavern_candidates_by_port: Dictionary = {}
 var market_trade_log: Array = []
 var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
-var morale: int = 70
+var morale: int = 0
 var game_time_seconds: float = START_OF_DAY_SECONDS
+var known_port_ids: Array[String] = []
+var ship_task_last_day: Dictionary = {}
+var next_trip_chart_discount: float = 0.0
 
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
@@ -43,11 +46,11 @@ func _process(delta: float) -> void:
 
 func new_game() -> void:
 	current_port_id = "aurelia"
-	money = 150
+	money = 0
 	ship_id = "rowboat"
 	owned_upgrades = []
 	ship_durability = get_effective_max_durability()
-	supplies = 8
+	supplies = 0
 	cargo = {}
 	day_count = 1
 	active_contracts = []
@@ -62,8 +65,11 @@ func new_game() -> void:
 	market_trade_log = []
 	office_member = false
 	office_storage_by_port = {}
-	morale = 70
+	morale = 0
 	game_time_seconds = START_OF_DAY_SECONDS
+	known_port_ids = ["aurelia"]
+	ship_task_last_day = {}
+	next_trip_chart_discount = 0.0
 	recent_trip_reports = []
 	morale_history = []
 	debug_contract_success_count = 0
@@ -96,6 +102,9 @@ func to_dict() -> Dictionary:
 		"office_storage_by_port": office_storage_by_port,
 		"morale": morale,
 		"game_time_seconds": game_time_seconds,
+		"known_port_ids": known_port_ids,
+		"ship_task_last_day": ship_task_last_day,
+		"next_trip_chart_discount": next_trip_chart_discount,
 		"recent_trip_reports": recent_trip_reports,
 		"morale_history": morale_history,
 		"debug_contract_success_count": debug_contract_success_count,
@@ -106,10 +115,10 @@ func to_dict() -> Dictionary:
 
 func load_from_dict(data: Dictionary) -> void:
 	current_port_id = data.get("current_port_id", "aurelia")
-	money = int(data.get("money", 150))
+	money = int(data.get("money", 0))
 	ship_id = data.get("ship_id", "rowboat")
 	ship_durability = int(data.get("ship_durability", 100))
-	supplies = int(data.get("supplies", 8))
+	supplies = int(data.get("supplies", 0))
 	cargo = data.get("cargo", {})
 	owned_upgrades = Array(data.get("owned_upgrades", []), TYPE_STRING, "", null)
 	day_count = int(data.get("day_count", 1))
@@ -125,8 +134,11 @@ func load_from_dict(data: Dictionary) -> void:
 	market_trade_log = data.get("market_trade_log", [])
 	office_member = bool(data.get("office_member", false))
 	office_storage_by_port = data.get("office_storage_by_port", {})
-	morale = int(data.get("morale", 70))
+	morale = int(data.get("morale", 0))
 	game_time_seconds = float(data.get("game_time_seconds", START_OF_DAY_SECONDS + max(0, day_count - 1) * GAME_SECONDS_PER_DAY))
+	known_port_ids = Array(data.get("known_port_ids", []), TYPE_STRING, "", null)
+	ship_task_last_day = data.get("ship_task_last_day", {})
+	next_trip_chart_discount = float(data.get("next_trip_chart_discount", 0.0))
 	recent_trip_reports = data.get("recent_trip_reports", [])
 	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
 	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
@@ -139,6 +151,11 @@ func load_from_dict(data: Dictionary) -> void:
 	crew_count = min(crew_count, get_effective_crew_capacity())
 	if not current_ship_supports_personnel():
 		officer_assignments = {}
+	if known_port_ids.is_empty():
+		known_port_ids = [current_port_id]
+	if not current_port_id in known_port_ids:
+		known_port_ids.append(current_port_id)
+	_normalize_morale()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -175,6 +192,15 @@ func advance_game_time_days(days: float) -> void:
 		return
 	advance_game_time_seconds(days * GAME_SECONDS_PER_DAY)
 
+func set_game_time_seconds(total_seconds: float) -> void:
+	game_time_seconds = max(0.0, total_seconds)
+	_sync_day_count_from_time()
+
+func sleep_until_next_morning() -> void:
+	var current_day_index: int = int(floor(game_time_seconds / GAME_SECONDS_PER_DAY))
+	var next_morning_seconds: float = (current_day_index + 1) * GAME_SECONDS_PER_DAY + 6.0 * 3600.0
+	set_game_time_seconds(next_morning_seconds)
+
 func _sync_day_count_from_time() -> void:
 	day_count = 1 + int(floor(game_time_seconds / GAME_SECONDS_PER_DAY))
 
@@ -198,6 +224,15 @@ func current_ship_supports_personnel() -> bool:
 
 func current_ship_can_install_upgrades() -> bool:
 	return bool(get_ship_def().get("can_install_upgrades", true))
+
+func discover_port(port_id: String) -> void:
+	if port_id.is_empty():
+		return
+	if not port_id in known_port_ids:
+		known_port_ids.append(port_id)
+
+func has_known_port(port_id: String) -> bool:
+	return port_id in known_port_ids
 
 func _get_upgrade_bonus_int(key: String) -> int:
 	var bonus: int = 0
@@ -254,6 +289,8 @@ func get_role_stat(role: String, stat_name: String) -> int:
 		return 0
 	return int(officer.get(stat_name, 0))
 func get_morale_bonus() -> int:
+	if crew_count <= 0:
+		return 0
 	return clamp(int(floor(float(morale - 50) / 10.0)), -4, 5)
 func get_effective_navigation_rating() -> int:
 	return get_role_stat("navigator", "navigation") + get_role_stat("captain", "leadership") + int(round(get_effective_speed() * 2.0))
@@ -266,8 +303,8 @@ func get_effective_command_rating() -> int:
 func get_crew_discipline() -> int:
 	return get_effective_command_rating() + int(ceil(float(crew_count) / 3.0)) + get_morale_bonus()
 func get_travel_supply_discount() -> float:
-	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01
-	return min(0.30, discount)
+	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01 + next_trip_chart_discount
+	return min(0.45, discount)
 func get_repair_discount() -> float:
 	var discount: float = float(get_role_stat("carpenter", "repair")) * 0.04 + float(get_role_stat("captain", "leadership")) * 0.015
 	return min(0.35, discount)
@@ -283,10 +320,18 @@ func get_officer_wages_due() -> int:
 	return get_active_officer_count() * 4
 func get_ship_upkeep_due() -> int:
 	var ship: Dictionary = get_ship_def()
-	return max(2, int(ship.get("firepower", 0)) / 3 + int(ship.get("hull_armor", 0)) / 3 + int(ship.get("cargo_capacity", 0)) / 20)
+	if bool(ship.get("free_upkeep", false)):
+		return 0
+	var base_upkeep: int = int(ship.get("firepower", 0)) / 3 + int(ship.get("hull_armor", 0)) / 3 + int(ship.get("cargo_capacity", 0)) / 20
+	var modified_upkeep: int = int(ceil(float(base_upkeep) * float(ship.get("upkeep_modifier", 1.0))))
+	return max(2, modified_upkeep)
 func get_total_upkeep_due() -> int:
 	return get_crew_wages_due() + get_officer_wages_due() + get_ship_upkeep_due()
 func change_morale(delta: int) -> void:
+	if crew_count <= 0:
+		morale = 0
+		_record_morale_snapshot()
+		return
 	morale = clamp(morale + delta, 0, 100)
 	_record_morale_snapshot()
 func process_trip_costs() -> Dictionary:
@@ -297,9 +342,11 @@ func process_trip_costs() -> Dictionary:
 	var paid: int = min(money, total_due)
 	money -= paid
 	var unpaid: int = total_due - paid
-	var morale_change: int = 1
-	if unpaid > 0:
-		morale_change = -min(20, 5 + unpaid / 2 - int(get_effective_command_rating() / 3))
+	var morale_change: int = 0
+	if crew_count > 0:
+		morale_change = 1
+		if unpaid > 0:
+			morale_change = -min(20, 5 + unpaid / 2 - int(get_effective_command_rating() / 3))
 	change_morale(morale_change)
 	return {
 		"crew_wages": crew_wages,
@@ -419,6 +466,10 @@ func _record_morale_snapshot() -> void:
 	if morale_history.size() > RECENT_MORALE_LIMIT:
 		morale_history = morale_history.slice(morale_history.size() - RECENT_MORALE_LIMIT, morale_history.size())
 
+func _normalize_morale() -> void:
+	if crew_count <= 0:
+		morale = 0
+
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrade_id in owned_upgrades
 func apply_upgrade(upgrade_id: String) -> void:
@@ -426,6 +477,7 @@ func apply_upgrade(upgrade_id: String) -> void:
 		owned_upgrades.append(upgrade_id)
 		ship_durability = min(ship_durability, get_effective_max_durability())
 		crew_count = min(crew_count, get_effective_crew_capacity())
+		_normalize_morale()
 
 func add_cargo(good_id: String, qty: int) -> void:
 	cargo[good_id] = int(cargo.get(good_id, 0)) + qty
@@ -481,3 +533,4 @@ func apply_event_effects(effects: Dictionary) -> void:
 				cargo.erase(good_id_str)
 	supplies = max(0, supplies)
 	money = max(0, money)
+	_normalize_morale()

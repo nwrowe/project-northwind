@@ -19,6 +19,7 @@ const PORT_FLAVOR = {
 var save_slot_dialog
 var balance_debug_visible: bool = false
 var dockside_work_button: Button
+var ship_home_button: Button
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
@@ -65,6 +66,7 @@ func _ready() -> void:
 	$VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton.pressed.connect(_on_balance_debug_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
 	_ensure_dockside_work_button()
+	_ensure_ship_home_button()
 
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
@@ -140,6 +142,9 @@ func refresh_ui() -> void:
 	travel_button.disabled = false
 	travel_button.tooltip_text = ""
 	dockside_work_button.visible = is_home_port
+	ship_home_button.visible = GameState.current_ship_supports_personnel()
+	ship_home_button.disabled = not GameState.current_ship_supports_personnel()
+	ship_home_button.tooltip_text = "Your ship becomes accessible once you own a real vessel." if not GameState.current_ship_supports_personnel() else ""
 	_refresh_header_summary()
 
 func _apply_button_state(button: Button, disabled: bool, tooltip: String) -> void:
@@ -153,6 +158,14 @@ func _ensure_dockside_work_button() -> void:
 	dockside_work_button.custom_minimum_size = Vector2(0, 58)
 	dockside_work_button.pressed.connect(_on_dockside_work_pressed)
 	service_grid.add_child(dockside_work_button)
+
+func _ensure_ship_home_button() -> void:
+	ship_home_button = Button.new()
+	ship_home_button.name = "ShipHomeButton"
+	ship_home_button.text = "Your Ship"
+	ship_home_button.custom_minimum_size = Vector2(0, 58)
+	ship_home_button.pressed.connect(_on_ship_home_pressed)
+	service_grid.add_child(ship_home_button)
 
 func _is_after_hours() -> bool:
 	var seconds_of_day: int = GameState.get_time_of_day_seconds()
@@ -214,6 +227,8 @@ func _on_upgrade_pressed() -> void:
 	ScreenRouter.show_upgrade_panel()
 func _on_dockside_work_pressed() -> void:
 	ScreenRouter.show_aurelia_bootstrap_screen()
+func _on_ship_home_pressed() -> void:
+	ScreenRouter.show_ship_screen()
 func _on_save_pressed() -> void:
 	save_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:

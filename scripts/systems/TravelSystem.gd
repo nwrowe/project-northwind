@@ -33,11 +33,14 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 	var from_port: Dictionary = GameData.get_port(from_port_id)
 	var start_money: int = GameState.money
 	var start_morale: int = GameState.morale
+	var chart_bonus_used: float = GameState.next_trip_chart_discount
 
 	GameState.supplies -= supply_cost
+	GameState.next_trip_chart_discount = 0.0
 	var trip_costs: Dictionary = GameState.process_trip_costs()
 	GameState.advance_game_time_days(float(route.get("distance", 1)))
 	GameState.current_port_id = str(route.get("to", GameState.current_port_id))
+	GameState.discover_port(GameState.current_port_id)
 	var destination_port_id: String = GameState.current_port_id
 	var destination: Dictionary = GameData.get_port(destination_port_id)
 
@@ -66,7 +69,8 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 		supply_cost,
 		trip_costs,
 		triggered,
-		contract_result
+		contract_result,
+		chart_bonus_used
 	)
 	GameState.pending_status_message = arrival_summary
 
@@ -81,12 +85,12 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 		"contract_result": contract_result,
 	}
 
-func _build_arrival_summary(from_port_name: String, to_port_name: String, supply_cost: int, trip_costs: Dictionary, event_triggered: bool, contract_result: Dictionary) -> String:
+func _build_arrival_summary(from_port_name: String, to_port_name: String, supply_cost: int, trip_costs: Dictionary, event_triggered: bool, contract_result: Dictionary, chart_bonus_used: float) -> String:
 	var lines: Array[String] = []
 	lines.append("Arrived: %s -> %s" % [from_port_name, to_port_name])
 	lines.append("Supplies spent: %d" % supply_cost)
-	if GameState.get_travel_supply_discount() > 0.0:
-		lines.append("Navigator saved %.0f%% of normal travel supplies" % (GameState.get_travel_supply_discount() * 100.0))
+	if GameState.get_travel_supply_discount() > 0.0 or chart_bonus_used > 0.0:
+		lines.append("Route planning and officers cut normal travel supply use.")
 	lines.append("Crew wages %d | Officer wages %d | Ship upkeep %d" % [int(trip_costs.get("crew_wages", 0)), int(trip_costs.get("officer_wages", 0)), int(trip_costs.get("ship_upkeep", 0))])
 	if int(trip_costs.get("unpaid", 0)) > 0:
 		lines.append("Unpaid upkeep: %d | Morale %d" % [int(trip_costs.get("unpaid", 0)), GameState.morale])
