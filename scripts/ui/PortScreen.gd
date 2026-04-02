@@ -98,7 +98,7 @@ func refresh_ui() -> void:
 	cargo_label.text = "Cargo: %d / %d | Intimidation %d | Boarding %d | Upkeep %d" % [GameState.get_current_cargo_used(), GameState.get_effective_cargo_capacity(), GameState.get_effective_intimidation(), GameState.get_effective_boarding_strength(), GameState.get_ship_upkeep_due()]
 	local_flavor_label.text = str(flavor.get("overview", ""))
 	npc_label.text = str(flavor.get("npc", ""))
-	climate_label.text = "Climate: %s" % climate_system.get_climate_name_for_current_port()
+	climate_label.text = "Climate: %s | Weather: %s" % [climate_system.get_climate_name_for_current_port(), GameState.get_weather_display_name()]
 	gathering_label.text = "Wild resources: %s" % climate_system.get_gathering_summary_for_current_port()
 	refining_label.text = "Refining specialties: %s" % climate_system.get_refining_summary_for_current_port()
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
