@@ -96,7 +96,7 @@ columns = 3
 
 [node name="MarketButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-custom_minimum_size = Vector(0, 58)
+custom_minimum_size = Vector2(0, 58)
 text = "Market Square"
 
 [node name="ContractsButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
@@ -111,7 +111,7 @@ text = "Tavern"
 
 [node name="OfficeButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
 layout_mode = 2
-custom_minimum_size = Vector(0, 58)
+custom_minimum_size = Vector2(0, 58)
 text = "Harbor Office"
 
 [node name="ShipyardButton" type="Button" parent="VBoxContainer/ServicePanel/GridContainer"]
@@ -200,7 +200,7 @@ text = "Show Balance Debug"
 
 [node name="NewGameConfirmDialog" type="ConfirmationDialog" parent="."]
 title = "Start New Game?"
-size = Vectori4(460, 0)
+size = Vector2i(460, 0)
 dialog_text = "Are you sure you want to start a new game?\nYou will lose any unsaved progress!"
 ok_button_text = "Yes"
 cancel_button_text = "No"
