@@ -63,11 +63,15 @@ func get_candidates_for_current_port() -> Array:
 	return GameState.tavern_candidates_by_port.get(GameState.current_port_id, [])
 
 func reroll_candidates_for_current_port() -> Dictionary:
+	if not GameState.current_ship_supports_personnel():
+		return {"success": false, "message": "No crew or officers can sign onto a rowboat."}
 	var port_id = str(GameState.current_port_id)
 	GameState.tavern_candidates_by_port[port_id] = _generate_candidate_pool(port_id)
 	return {"success": true, "message": "Fresh faces drift into the tavern tonight."}
 
 func hire_candidate(candidate_id: String) -> Dictionary:
+	if not GameState.current_ship_supports_personnel():
+		return {"success": false, "message": "The rowboat cannot take on crew or officers."}
 	ensure_candidates_for_current_port()
 	var port_id = str(GameState.current_port_id)
 	var candidates = GameState.tavern_candidates_by_port.get(port_id, [])

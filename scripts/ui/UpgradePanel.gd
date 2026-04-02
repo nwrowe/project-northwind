@@ -13,6 +13,14 @@ func refresh_ui() -> void:
 	for child in upgrade_list.get_children():
 		child.queue_free()
 
+	if not GameState.current_ship_can_install_upgrades():
+		var blocked_label := Label.new()
+		blocked_label.text = "The rowboat cannot be outfitted with harbor upgrades. Repairs are the only ship work it can take."
+		blocked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		blocked_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		upgrade_list.add_child(blocked_label)
+		return
+
 	for upgrade in upgrade_system.get_available_upgrades():
 		var card := PanelContainer.new()
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL

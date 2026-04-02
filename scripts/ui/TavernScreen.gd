@@ -51,10 +51,18 @@ func refresh_ui() -> void:
 	officer_summary_label.text = "Officers: %s" % " | ".join(tavern_system.get_officer_summary_lines())
 	crew_summary_label.text = "Crew: %d / %d | Money: %d | Morale: %d" % [GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.money, GameState.morale]
 	_refresh_recruits()
+	_update_button_states()
 
 func _refresh_recruits() -> void:
 	for child in recruit_list.get_children():
 		child.queue_free()
+	if not GameState.current_ship_supports_personnel():
+		var blocked_label := Label.new()
+		blocked_label.text = "This rowboat cannot take on crew or officers. If you want hands on deck, you will need to buy a larger ship first."
+		blocked_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		blocked_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		recruit_list.add_child(blocked_label)
+		return
 	for candidate in tavern_system.get_candidates_for_current_port():
 		_add_candidate_row(candidate)
 
@@ -110,6 +118,17 @@ func _hire_candidate(candidate_id: String) -> void:
 	info_label.text = str(result.get("message", ""))
 	refresh_ui()
 
+func _update_button_states() -> void:
+	var supports_personnel: bool = GameState.current_ship_supports_personnel()
+	button_row.get_node("NewFacesButton").disabled = not supports_personnel
+	button_row.get_node("CrewRoundButton").disabled = not supports_personnel or GameState.crew_count <= 0
+	if not supports_personnel:
+		button_row.get_node("NewFacesButton").tooltip_text = "The rowboat cannot take on new crew or officers."
+		button_row.get_node("CrewRoundButton").tooltip_text = "No crew can be assigned to the rowboat."
+	else:
+		button_row.get_node("NewFacesButton").tooltip_text = ""
+		button_row.get_node("CrewRoundButton").tooltip_text = ""
+
 func _on_new_rumor_pressed() -> void:
 	_request_round("rumor")
 
@@ -120,6 +139,9 @@ func _on_crew_round_pressed() -> void:
 	_request_round("crew")
 
 func _request_round(action: String) -> void:
+	if action != "rumor" and not GameState.current_ship_supports_personnel():
+		info_label.text = "The rowboat cannot support crew or officers."
+		return
 	var cost: int = _get_round_cost(action)
 	if GameState.money < cost:
 		info_label.text = "Not enough gold to pay for that round."

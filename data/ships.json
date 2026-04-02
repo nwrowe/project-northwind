@@ -1,5 +1,26 @@
 [
   {
+    "id": "rowboat",
+    "name": "Weathered Rowboat",
+    "cargo_capacity": 6,
+    "max_durability": 45,
+    "speed": 0.65,
+    "supply_efficiency": 0.75,
+    "upkeep_modifier": 0.30,
+    "base_price": 0,
+    "firepower": 0,
+    "hull_armor": 0,
+    "evasion": 1,
+    "intimidation": 0,
+    "crew_capacity": 0,
+    "officer_slots": 0,
+    "cannon_slots": 0,
+    "boarding_strength": 0,
+    "supports_personnel": false,
+    "can_install_upgrades": false,
+    "starter_vessel": true
+  },
+  {
     "id": "coastal_sloop",
     "name": "Coastal Sloop",
     "cargo_capacity": 20,
@@ -7,7 +28,7 @@
     "speed": 1.00,
     "supply_efficiency": 1.00,
     "upkeep_modifier": 1.00,
-    "base_price": 0,
+    "base_price": 120,
     "firepower": 0,
     "hull_armor": 0,
     "evasion": 3,
@@ -15,7 +36,9 @@
     "crew_capacity": 8,
     "officer_slots": 1,
     "cannon_slots": 1,
-    "boarding_strength": 2
+    "boarding_strength": 2,
+    "supports_personnel": true,
+    "can_install_upgrades": true
   },
   {
     "id": "merchant_brig",
@@ -33,6 +56,8 @@
     "crew_capacity": 16,
     "officer_slots": 2,
     "cannon_slots": 3,
-    "boarding_strength": 4
+    "boarding_strength": 4,
+    "supports_personnel": true,
+    "can_install_upgrades": true
   }
 ]
