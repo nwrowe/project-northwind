@@ -14,6 +14,7 @@ const PORT_FLAVOR = {
 }
 
 var save_slot_dialog
+var balance_debug_visible: bool = false
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
@@ -29,6 +30,9 @@ var save_slot_dialog
 @onready var cargo_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/CargoSummaryLabel
 @onready var contract_summary_label = $VBoxContainer/SummaryPanel/VBoxContainer/ContractSummaryLabel
 @onready var action_status_label = $VBoxContainer/SummaryPanel/VBoxContainer/ActionStatusLabel
+@onready var balance_debug_panel = $VBoxContainer/BalanceDebugPanel
+@onready var balance_debug_label = $VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer/BalanceDebugLabel
+@onready var balance_debug_toggle_button = $VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
@@ -44,6 +48,7 @@ func _ready() -> void:
 	$VBoxContainer/FooterPanel/HBoxContainer/SaveButton.pressed.connect(_on_save_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/LoadButton.pressed.connect(_on_load_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
+	$VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton.pressed.connect(_on_balance_debug_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
 
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
@@ -51,18 +56,23 @@ func _ready() -> void:
 	save_slot_dialog.save_requested.connect(_on_save_slot_requested)
 	save_slot_dialog.load_requested.connect(_on_load_slot_requested)
 	save_slot_dialog.delete_requested.connect(_on_delete_slot_requested)
+	_sync_balance_debug_visibility()
 	refresh_ui()
 
 	if not GameState.pending_status_message.is_empty():
 		action_status_label.text = GameState.pending_status_message
 		GameState.pending_status_message = ""
 
+func _process(_delta: float) -> void:
+	_refresh_header_summary()
+	if balance_debug_visible:
+		balance_debug_label.text = GameState.get_balance_debug_report()
+
 func refresh_ui() -> void:
 	var port: Dictionary = GameData.get_port(GameState.current_port_id)
 	var ship: Dictionary = GameData.get_ship(GameState.ship_id)
 	var flavor: Dictionary = PORT_FLAVOR.get(GameState.current_port_id, {"overview": "This harbor is busy with local traders, dockhands, and captains watching the tides.", "npc": "Someone near the docks always seems to know where the next opportunity is hiding."})
 	port_name_label.text = "%s Port Hub" % port.get("name", "Unknown Port")
-	day_money_label.text = "Day %d | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.day_count, GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
 	ship_label.text = "Ship: %s | Crew %d/%d | Officers %d slots" % [ship.get("name", "Unknown Ship"), GameState.crew_count, GameState.get_effective_crew_capacity(), GameState.get_effective_officer_slots()]
 	durability_label.text = "Durability: %d / %d | Armor %d | Firepower %d" % [GameState.ship_durability, GameState.get_effective_max_durability(), GameState.get_effective_hull_armor(), GameState.get_effective_firepower()]
 	supplies_label.text = "Supplies: %d | Speed %.2f | Evasion %d | Wages due %d" % [GameState.supplies, GameState.get_effective_speed(), GameState.get_effective_evasion(), GameState.get_crew_wages_due() + GameState.get_officer_wages_due()]
@@ -74,6 +84,11 @@ func refresh_ui() -> void:
 	refining_label.text = "Refining specialties: %s" % climate_system.get_refining_summary_for_current_port()
 	cargo_summary_label.text = "Cargo: %s" % ("Empty" if GameState.cargo.is_empty() else ", ".join(_cargo_parts()))
 	contract_summary_label.text = _build_contract_summary()
+	balance_debug_label.text = GameState.get_balance_debug_report()
+	_refresh_header_summary()
+
+func _refresh_header_summary() -> void:
+	day_money_label.text = "%s | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.get_day_and_time_string(), GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
 
 func _cargo_parts() -> Array[String]:
 	var parts: Array[String] = []
@@ -94,6 +109,16 @@ func _build_contract_summary() -> String:
 	if nearest_deadline <= 1:
 		urgency = " | Deadline urgent"
 	return "Harbormaster: %d contracts available | %d active | %d ready now | Trip costs %d%s" % [available, active.size(), completable, GameState.get_total_upkeep_due(), urgency]
+
+func _sync_balance_debug_visibility() -> void:
+	balance_debug_panel.visible = balance_debug_visible
+	balance_debug_toggle_button.text = "Hide Balance Debug" if balance_debug_visible else "Show Balance Debug"
+
+func _on_balance_debug_pressed() -> void:
+	balance_debug_visible = not balance_debug_visible
+	_sync_balance_debug_visibility()
+	if balance_debug_visible:
+		balance_debug_label.text = GameState.get_balance_debug_report()
 
 func _on_market_pressed() -> void:
 	ScreenRouter.show_market_screen()
