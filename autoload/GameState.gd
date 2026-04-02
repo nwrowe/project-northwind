@@ -1,5 +1,8 @@
 extends Node
 
+const RECENT_TRIP_LIMIT := 12
+const RECENT_MORALE_LIMIT := 24
+
 var current_port_id: String = ""
 var money: int = 0
 var ship_id: String = ""
@@ -23,6 +26,13 @@ var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
 var morale: int = 70
 
+var recent_trip_reports: Array = []
+var morale_history: Array[int] = []
+var debug_contract_success_count: int = 0
+var debug_contract_expiry_count: int = 0
+var debug_contract_income_total: int = 0
+var debug_event_income_total: int = 0
+
 func new_game() -> void:
 	current_port_id = "aurelia"
 	money = 150
@@ -45,6 +55,13 @@ func new_game() -> void:
 	office_member = false
 	office_storage_by_port = {}
 	morale = 70
+	recent_trip_reports = []
+	morale_history = []
+	debug_contract_success_count = 0
+	debug_contract_expiry_count = 0
+	debug_contract_income_total = 0
+	debug_event_income_total = 0
+	_record_morale_snapshot()
 
 func to_dict() -> Dictionary:
 	return {
@@ -68,6 +85,12 @@ func to_dict() -> Dictionary:
 		"office_member": office_member,
 		"office_storage_by_port": office_storage_by_port,
 		"morale": morale,
+		"recent_trip_reports": recent_trip_reports,
+		"morale_history": morale_history,
+		"debug_contract_success_count": debug_contract_success_count,
+		"debug_contract_expiry_count": debug_contract_expiry_count,
+		"debug_contract_income_total": debug_contract_income_total,
+		"debug_event_income_total": debug_event_income_total,
 	}
 
 func load_from_dict(data: Dictionary) -> void:
@@ -92,6 +115,14 @@ func load_from_dict(data: Dictionary) -> void:
 	office_member = bool(data.get("office_member", false))
 	office_storage_by_port = data.get("office_storage_by_port", {})
 	morale = int(data.get("morale", 70))
+	recent_trip_reports = data.get("recent_trip_reports", [])
+	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
+	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
+	debug_contract_expiry_count = int(data.get("debug_contract_expiry_count", 0))
+	debug_contract_income_total = int(data.get("debug_contract_income_total", 0))
+	debug_event_income_total = int(data.get("debug_event_income_total", 0))
+	if morale_history.is_empty():
+		_record_morale_snapshot()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
@@ -209,6 +240,7 @@ func get_total_upkeep_due() -> int:
 	return get_crew_wages_due() + get_officer_wages_due() + get_ship_upkeep_due()
 func change_morale(delta: int) -> void:
 	morale = clamp(morale + delta, 0, 100)
+	_record_morale_snapshot()
 func process_trip_costs() -> Dictionary:
 	var crew_wages: int = get_crew_wages_due()
 	var officer_wages: int = get_officer_wages_due()
@@ -239,6 +271,104 @@ func apply_crew_loss(loss: int) -> int:
 	crew_count = max(1, crew_count - loss)
 	change_morale(-loss * 2)
 	return previous - crew_count
+
+func record_trip_report(report: Dictionary) -> void:
+	recent_trip_reports.append(report)
+	if recent_trip_reports.size() > RECENT_TRIP_LIMIT:
+		recent_trip_reports = recent_trip_reports.slice(recent_trip_reports.size() - RECENT_TRIP_LIMIT, recent_trip_reports.size())
+
+func record_contract_completed(payout_total: int) -> void:
+	debug_contract_success_count += 1
+	debug_contract_income_total += max(0, payout_total)
+
+func record_contract_expired() -> void:
+	debug_contract_expiry_count += 1
+
+func get_balance_debug_report() -> String:
+	var lines: Array[String] = []
+	var trip_count: int = recent_trip_reports.size()
+	lines.append("Recent trips tracked: %d" % trip_count)
+
+	if trip_count == 0:
+		lines.append("No completed trips yet.")
+	else:
+		var total_delta: int = 0
+		var total_upkeep_paid: int = 0
+		var total_morale_delta: int = 0
+		var best_delta: int = -999999
+		var worst_delta: int = 999999
+		var positive_trips: int = 0
+		for report in recent_trip_reports:
+			var money_delta: int = int(report.get("money_delta", 0))
+			total_delta += money_delta
+			total_upkeep_paid += int(report.get("upkeep_paid", 0))
+			total_morale_delta += int(report.get("morale_after", 0)) - int(report.get("morale_before", 0))
+			best_delta = max(best_delta, money_delta)
+			worst_delta = min(worst_delta, money_delta)
+			if money_delta >= 0:
+				positive_trips += 1
+		var last_trip: Dictionary = recent_trip_reports.back()
+		lines.append("Trip Δmoney avg %d | best %d | worst %d | positive %d/%d" % [int(round(float(total_delta) / float(trip_count))), best_delta, worst_delta, positive_trips, trip_count])
+		lines.append("Last trip: %s -> %s | Δmoney %d | upkeep paid %d" % [str(last_trip.get("from_port_name", "?")), str(last_trip.get("to_port_name", "?")), int(last_trip.get("money_delta", 0)), int(last_trip.get("upkeep_paid", 0))])
+		lines.append("Recent upkeep avg %d/trip | morale Δ avg %d/trip" % [int(round(float(total_upkeep_paid) / float(trip_count))), int(round(float(total_morale_delta) / float(trip_count)))])
+
+	var trade_sell_income: int = 0
+	var profit_by_good: Dictionary = {}
+	for entry in market_trade_log:
+		var entry_type: String = str(entry.get("type", ""))
+		var good_id: String = str(entry.get("good_id", ""))
+		var total_value: int = int(entry.get("price", 0)) * int(entry.get("quantity", 0))
+		if entry_type == "buy":
+			profit_by_good[good_id] = int(profit_by_good.get(good_id, 0)) - total_value
+		elif entry_type == "sell":
+			trade_sell_income += total_value
+			profit_by_good[good_id] = int(profit_by_good.get(good_id, 0)) + total_value
+
+	var total_income: int = trade_sell_income + debug_contract_income_total + debug_event_income_total
+	var upkeep_paid_total: int = 0
+	for report in recent_trip_reports:
+		upkeep_paid_total += int(report.get("upkeep_paid", 0))
+	var burden_text := "n/a"
+	if total_income > 0:
+		burden_text = "%d%%" % int(round((float(upkeep_paid_total) / float(total_income)) * 100.0))
+	lines.append("Upkeep burden: recent paid %d vs total income %d (%s)" % [upkeep_paid_total, total_income, burden_text])
+	lines.append("Contracts: %d completed | %d expired" % [debug_contract_success_count, debug_contract_expiry_count])
+
+	if morale_history.is_empty():
+		lines.append("Morale trend: current %d" % morale)
+	else:
+		var min_morale: int = morale_history[0]
+		var max_morale: int = morale_history[0]
+		var total_morale: int = 0
+		for morale_value in morale_history:
+			min_morale = min(min_morale, int(morale_value))
+			max_morale = max(max_morale, int(morale_value))
+			total_morale += int(morale_value)
+		lines.append("Morale trend: current %d | avg %d | min %d | max %d" % [morale, int(round(float(total_morale) / float(morale_history.size()))), min_morale, max_morale])
+
+	var good_entries: Array[Dictionary] = []
+	for good_id in profit_by_good.keys():
+		good_entries.append({"good_id": str(good_id), "profit": int(profit_by_good[good_id])})
+	good_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a.get("profit", 0)) > int(b.get("profit", 0))
+	)
+	if good_entries.is_empty():
+		lines.append("Top goods: no realized trade data yet")
+	else:
+		var parts: Array[String] = []
+		for i in range(min(3, good_entries.size())):
+			var good_entry: Dictionary = good_entries[i]
+			var good_name: String = str(GameData.get_good(str(good_entry.get("good_id", ""))).get("name", str(good_entry.get("good_id", ""))))
+			var profit: int = int(good_entry.get("profit", 0))
+			parts.append("%s %s%d" % [good_name, "+" if profit >= 0 else "", profit])
+		lines.append("Top goods: %s" % ", ".join(parts))
+
+	return "\n".join(lines)
+
+func _record_morale_snapshot() -> void:
+	morale_history.append(morale)
+	if morale_history.size() > RECENT_MORALE_LIMIT:
+		morale_history = morale_history.slice(morale_history.size() - RECENT_MORALE_LIMIT, morale_history.size())
 
 func has_upgrade(upgrade_id: String) -> bool:
 	return upgrade_id in owned_upgrades
@@ -284,7 +414,10 @@ func change_reputation(trust_delta: int, infamy_delta: int) -> void:
 func apply_event_effects(effects: Dictionary) -> void:
 	ship_durability = max(0, ship_durability - int(effects.get("durability_loss", 0)))
 	supplies -= int(effects.get("supply_loss", 0))
-	money -= int(effects.get("money_loss", 0))
+	var money_loss: int = int(effects.get("money_loss", 0))
+	if money_loss < 0:
+		debug_event_income_total += abs(money_loss)
+	money -= money_loss
 	var crew_loss: int = int(effects.get("crew_loss", 0))
 	if crew_loss > 0:
 		apply_crew_loss(crew_loss)
