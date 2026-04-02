@@ -4,7 +4,11 @@ extends Control
 
 func _ready() -> void:
 	randomize()
-	GameData.load_all_data()
+	if not GameData.load_all_data():
+		push_error(GameData.get_validation_report())
+		get_tree().quit(1)
+		return
+
 	ScreenRouter.set_root(screen_root)
 
 	if SaveManager.has_any_save():

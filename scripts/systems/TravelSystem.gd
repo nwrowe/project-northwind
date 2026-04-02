@@ -26,21 +26,26 @@ func travel(route_id: String) -> Dictionary:
 	if not can_travel(route):
 		return {"success": false, "message": "Not enough supplies or ship cannot travel."}
 
-	var from_port: Dictionary = GameData.get_port(GameState.current_port_id)
-	var supply_cost: int = get_supply_cost(route)
+	return _advance_trip(route, get_supply_cost(route))
+
+func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
+	var from_port_id: String = GameState.current_port_id
+	var from_port: Dictionary = GameData.get_port(from_port_id)
+
 	GameState.supplies -= supply_cost
 	var trip_costs: Dictionary = GameState.process_trip_costs()
 	GameState.day_count += int(route.get("distance", 1))
-	GameState.current_port_id = route.get("to", GameState.current_port_id)
-	var destination: Dictionary = GameData.get_port(GameState.current_port_id)
+	GameState.current_port_id = str(route.get("to", GameState.current_port_id))
 
+	var destination_port_id: String = GameState.current_port_id
+	var destination: Dictionary = GameData.get_port(destination_port_id)
 	var event_payload: Dictionary = event_system.roll_event(float(route.get("risk", 0.0)))
 	var triggered: bool = bool(event_payload.get("triggered", false))
 	var contract_result: Dictionary = contract_system.resolve_contracts_on_arrival()
 
 	var arrival_summary: String = _build_arrival_summary(
-		from_port.get("name", str(route.get("from", ""))),
-		destination.get("name", str(route.get("to", ""))),
+		from_port.get("name", from_port_id),
+		destination.get("name", destination_port_id),
 		supply_cost,
 		trip_costs,
 		triggered,
@@ -50,7 +55,10 @@ func travel(route_id: String) -> Dictionary:
 
 	return {
 		"success": true,
-		"destination_port_id": GameState.current_port_id,
+		"from_port_id": from_port_id,
+		"destination_port_id": destination_port_id,
+		"route_id": str(route.get("id", "")),
+		"route_distance": int(route.get("distance", 1)),
 		"supply_cost": supply_cost,
 		"trip_costs": trip_costs,
 		"event_triggered": triggered,
