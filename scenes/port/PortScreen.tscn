@@ -171,8 +171,15 @@ layout_mode = 2
 layout_mode = 2
 text = "Balance Debug"
 
-[node name="BalanceDebugLabel" type="Label" parent="VBoxContainer/BalanceDebugPanel/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/BalanceDebugPanel/VBoxContainer"]
 layout_mode = 2
+custom_minimum_size = Vector2(0, 180)
+size_flags_vertical = 3
+
+[node name="BalanceDebugLabel" type="Label" parent="VBoxContainer/BalanceDebugPanel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 text = ""
 autowrap_mode = 3
 
