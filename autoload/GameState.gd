@@ -151,10 +151,13 @@ func load_from_dict(data: Dictionary) -> void:
 	crew_count = min(crew_count, get_effective_crew_capacity())
 	if not current_ship_supports_personnel():
 		officer_assignments = {}
+<<<<<<< feature/ship-as-home-screen
 	if known_port_ids.is_empty():
 		known_port_ids = [current_port_id]
 	if not current_port_id in known_port_ids:
 		known_port_ids.append(current_port_id)
+=======
+>>>>>>> main
 	_normalize_morale()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
