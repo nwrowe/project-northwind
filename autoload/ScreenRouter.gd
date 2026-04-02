@@ -12,6 +12,7 @@ const UPGRADE_PANEL := preload("res://scenes/upgrades/UpgradePanel.tscn")
 const CONTRACT_SCREEN := preload("res://scenes/contracts/ContractScreen.tscn")
 const REPAIR_SCREEN := preload("res://scenes/repair/RepairScreen.tscn")
 const SHIPYARD_SCREEN := preload("res://scenes/shipyard/ShipyardScreen.tscn")
+const SHIP_SCREEN := preload("res://scenes/ship/ShipScreen.tscn")
 const TAVERN_SCREEN := preload("res://scenes/tavern/TavernScreen.tscn")
 const CHANDLERY_SCREEN := preload("res://scenes/chandlery/ChandleryScreen.tscn")
 const OFFICE_SCREEN := preload("res://scenes/office/OfficeStorageScreen.tscn")
@@ -50,6 +51,8 @@ func show_repair_screen() -> void:
 	_show_scene(REPAIR_SCREEN)
 func show_shipyard_screen() -> void:
 	_show_scene(SHIPYARD_SCREEN)
+func show_ship_screen() -> void:
+	_show_scene(SHIP_SCREEN)
 func show_tavern_screen() -> void:
 	_show_scene(TAVERN_SCREEN)
 func show_chandlery_screen() -> void:

@@ -30,6 +30,9 @@ var office_member: bool = false
 var office_storage_by_port: Dictionary = {}
 var morale: int = 0
 var game_time_seconds: float = START_OF_DAY_SECONDS
+var known_port_ids: Array[String] = []
+var ship_task_last_day: Dictionary = {}
+var next_trip_chart_discount: float = 0.0
 
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
@@ -64,6 +67,9 @@ func new_game() -> void:
 	office_storage_by_port = {}
 	morale = 0
 	game_time_seconds = START_OF_DAY_SECONDS
+	known_port_ids = ["aurelia"]
+	ship_task_last_day = {}
+	next_trip_chart_discount = 0.0
 	recent_trip_reports = []
 	morale_history = []
 	debug_contract_success_count = 0
@@ -96,6 +102,9 @@ func to_dict() -> Dictionary:
 		"office_storage_by_port": office_storage_by_port,
 		"morale": morale,
 		"game_time_seconds": game_time_seconds,
+		"known_port_ids": known_port_ids,
+		"ship_task_last_day": ship_task_last_day,
+		"next_trip_chart_discount": next_trip_chart_discount,
 		"recent_trip_reports": recent_trip_reports,
 		"morale_history": morale_history,
 		"debug_contract_success_count": debug_contract_success_count,
@@ -127,6 +136,9 @@ func load_from_dict(data: Dictionary) -> void:
 	office_storage_by_port = data.get("office_storage_by_port", {})
 	morale = int(data.get("morale", 0))
 	game_time_seconds = float(data.get("game_time_seconds", START_OF_DAY_SECONDS + max(0, day_count - 1) * GAME_SECONDS_PER_DAY))
+	known_port_ids = Array(data.get("known_port_ids", []), TYPE_STRING, "", null)
+	ship_task_last_day = data.get("ship_task_last_day", {})
+	next_trip_chart_discount = float(data.get("next_trip_chart_discount", 0.0))
 	recent_trip_reports = data.get("recent_trip_reports", [])
 	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
 	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
@@ -139,6 +151,13 @@ func load_from_dict(data: Dictionary) -> void:
 	crew_count = min(crew_count, get_effective_crew_capacity())
 	if not current_ship_supports_personnel():
 		officer_assignments = {}
+<<<<<<< feature/ship-as-home-screen
+	if known_port_ids.is_empty():
+		known_port_ids = [current_port_id]
+	if not current_port_id in known_port_ids:
+		known_port_ids.append(current_port_id)
+=======
+>>>>>>> main
 	_normalize_morale()
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
@@ -209,6 +228,15 @@ func current_ship_supports_personnel() -> bool:
 func current_ship_can_install_upgrades() -> bool:
 	return bool(get_ship_def().get("can_install_upgrades", true))
 
+func discover_port(port_id: String) -> void:
+	if port_id.is_empty():
+		return
+	if not port_id in known_port_ids:
+		known_port_ids.append(port_id)
+
+func has_known_port(port_id: String) -> bool:
+	return port_id in known_port_ids
+
 func _get_upgrade_bonus_int(key: String) -> int:
 	var bonus: int = 0
 	for upgrade_id in owned_upgrades:
@@ -278,8 +306,8 @@ func get_effective_command_rating() -> int:
 func get_crew_discipline() -> int:
 	return get_effective_command_rating() + int(ceil(float(crew_count) / 3.0)) + get_morale_bonus()
 func get_travel_supply_discount() -> float:
-	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01
-	return min(0.30, discount)
+	var discount: float = float(get_role_stat("navigator", "navigation")) * 0.03 + float(get_role_stat("captain", "leadership")) * 0.01 + next_trip_chart_discount
+	return min(0.45, discount)
 func get_repair_discount() -> float:
 	var discount: float = float(get_role_stat("carpenter", "repair")) * 0.04 + float(get_role_stat("captain", "leadership")) * 0.015
 	return min(0.35, discount)
