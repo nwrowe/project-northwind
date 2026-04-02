@@ -16,6 +16,7 @@ const PORT_FLAVOR = {
 
 var save_slot_dialog
 var balance_debug_visible: bool = false
+var dockside_work_button: Button
 
 @onready var port_name_label = $VBoxContainer/HeaderPanel/VBoxContainer/PortNameLabel
 @onready var day_money_label = $VBoxContainer/HeaderPanel/VBoxContainer/DayMoneyLabel
@@ -37,6 +38,7 @@ var balance_debug_visible: bool = false
 @onready var contracts_button = $VBoxContainer/ServicePanel/GridContainer/ContractsButton
 @onready var office_button = $VBoxContainer/ServicePanel/GridContainer/OfficeButton
 @onready var upgrade_button = $VBoxContainer/ServicePanel/GridContainer/UpgradeButton
+@onready var service_grid = $VBoxContainer/ServicePanel/GridContainer
 @onready var new_game_confirm_dialog = $NewGameConfirmDialog
 
 func _ready() -> void:
@@ -54,6 +56,7 @@ func _ready() -> void:
 	$VBoxContainer/FooterPanel/HBoxContainer/NewGameButton.pressed.connect(_on_new_game_pressed)
 	$VBoxContainer/FooterPanel/HBoxContainer/BalanceDebugButton.pressed.connect(_on_balance_debug_pressed)
 	new_game_confirm_dialog.confirmed.connect(_on_new_game_confirmed)
+	_ensure_dockside_work_button()
 
 	save_slot_dialog = SAVE_SLOT_DIALOG_SCENE.instantiate()
 	add_child(save_slot_dialog)
@@ -96,7 +99,16 @@ func refresh_ui() -> void:
 	contracts_button.tooltip_text = "Aurelia is too small to host a harbormaster." if is_home_port else ""
 	office_button.disabled = is_home_port
 	office_button.tooltip_text = "Aurelia has no harbor office." if is_home_port else ""
+	dockside_work_button.visible = is_home_port
 	_refresh_header_summary()
+
+func _ensure_dockside_work_button() -> void:
+	dockside_work_button = Button.new()
+	dockside_work_button.name = "DocksideWorkButton"
+	dockside_work_button.text = "Dockside Work"
+	dockside_work_button.custom_minimum_size = Vector2(0, 58)
+	dockside_work_button.pressed.connect(_on_dockside_work_pressed)
+	service_grid.add_child(dockside_work_button)
 
 func _refresh_header_summary() -> void:
 	day_money_label.text = "%s | Money %d | Trust %d | Infamy %d | Morale %d" % [GameState.get_day_and_time_string(), GameState.money, GameState.trust_rating, GameState.infamy_rating, GameState.morale]
@@ -112,7 +124,7 @@ func _build_contract_summary() -> String:
 	var active: Array = contract_system.get_active_contracts()
 	var completable: int = contract_system.get_completable_contracts_for_current_port().size()
 	if GameState.current_port_id == HOME_PORT_ID:
-		return "Aurelia is a small home port with only basic services."
+		return "Aurelia is a small home port. Earn your first stake through dockside work."
 	if active.is_empty():
 		return "Harbormaster: %d contracts available | No active jobs | Total trip costs %d" % [available, GameState.get_total_upkeep_due()]
 	var nearest_deadline: int = 9999
@@ -151,6 +163,8 @@ func _on_resupply_pressed() -> void:
 	ScreenRouter.show_chandlery_screen()
 func _on_upgrade_pressed() -> void:
 	ScreenRouter.show_upgrade_panel()
+func _on_dockside_work_pressed() -> void:
+	ScreenRouter.show_aurelia_bootstrap_screen()
 func _on_save_pressed() -> void:
 	save_slot_dialog.open_for_save()
 func _on_load_pressed() -> void:

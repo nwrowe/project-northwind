@@ -35,6 +35,7 @@ func _ready() -> void:
 	story_label.text = "Cold surf. Splintered wood. The tide has already started to pull away."
 	interact_label.visible = false
 	continue_button.visible = false
+	continue_button.text = "Continue to Aurelia"
 	continue_button.pressed.connect(_on_continue_pressed)
 	dock_glow.visible = false
 
@@ -106,12 +107,12 @@ func _interact_satchel() -> void:
 
 func _interact_fisher() -> void:
 	if not boat_checked:
-		story_label.text = "The fisher squints at you. \"Easy now. See to your wreck first. Tide keeps its own ledger.\""
+		story_label.text = "The fisher studies you and tells you to see to your wreck first."
 		return
 
 	if not fisher_spoken:
 		fisher_spoken = true
-		story_label.text = "\"You look half-drowned, friend. Gull's Landing is up the bluff. Come warm yourself before you fall over.\""
+		story_label.text = "The fisher says Aurelia is up the bluff. It is a poor little port, but poor ports still need hands."
 		continue_button.visible = true
 		transition_armed = true
 		return
@@ -122,7 +123,7 @@ func _on_continue_pressed() -> void:
 	if not transition_armed:
 		return
 	GameState.current_port_id = "aurelia"
-	GameState.pending_status_message = "You reached Aurelia soaked, nameless, and carrying only a brass token from the shore."
+	GameState.pending_status_message = "You reach Aurelia soaked, nameless, and broke. Maris points you toward Dockside Work if you want your first real stake."
 	ScreenRouter.show_port_screen()
 
 func _is_near(node: Control) -> bool:
