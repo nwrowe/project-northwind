@@ -1,6 +1,10 @@
 class_name TravelSystem
 extends RefCounted
 
+const STARTER_RIVER_ROUTE_IDS := ["aurelia_varenna", "aurelia_varenna_rev"]
+const STARTER_RIVER_SUPPLY_COST := 1
+const STARTER_RIVER_TRAVEL_HOURS := 2.0
+
 var event_system: EventSystem = EventSystem.new()
 var contract_system: ContractSystem = ContractSystem.new()
 
@@ -8,6 +12,8 @@ func get_routes_from_current_port() -> Array:
 	return GameData.get_routes_from(GameState.current_port_id)
 
 func get_supply_cost(route: Dictionary) -> int:
+	if _is_starter_river_crossing(route):
+		return STARTER_RIVER_SUPPLY_COST
 	var distance: float = float(route.get("distance", 0))
 	var efficiency: float = max(0.1, GameState.get_effective_supply_efficiency())
 	var base_cost: int = int(ceil(distance / efficiency))
@@ -25,8 +31,57 @@ func travel(route_id: String) -> Dictionary:
 		return {"success": false, "message": "Route not found."}
 	if not can_travel(route):
 		return {"success": false, "message": "Not enough supplies or ship cannot travel."}
-
+	if _is_starter_river_crossing(route):
+		return _advance_starter_river_crossing(route)
 	return _advance_trip(route, get_supply_cost(route))
+
+func _advance_starter_river_crossing(route: Dictionary) -> Dictionary:
+	var from_port_id: String = GameState.current_port_id
+	var from_port: Dictionary = GameData.get_port(from_port_id)
+	var destination_port_id: String = str(route.get("to", GameState.current_port_id))
+	var destination: Dictionary = GameData.get_port(destination_port_id)
+	var start_money: int = GameState.money
+	var start_morale: int = GameState.morale
+	var supply_cost: int = STARTER_RIVER_SUPPLY_COST
+	var chart_bonus_used: float = GameState.next_trip_chart_discount
+	GameState.supplies -= supply_cost
+	GameState.next_trip_chart_discount = 0.0
+	GameState.advance_game_time_seconds(STARTER_RIVER_TRAVEL_HOURS * 3600.0)
+	GameState.current_port_id = destination_port_id
+	GameState.discover_port(destination_port_id)
+	var contract_result: Dictionary = contract_system.resolve_contracts_on_arrival()
+	GameState.record_trip_report({
+		"day": GameState.day_count,
+		"route_id": str(route.get("id", "")),
+		"from_port_id": from_port_id,
+		"from_port_name": str(from_port.get("name", from_port_id)),
+		"to_port_id": destination_port_id,
+		"to_port_name": str(destination.get("name", destination_port_id)),
+		"money_before": start_money,
+		"money_after": GameState.money,
+		"money_delta": GameState.money - start_money,
+		"morale_before": start_morale,
+		"morale_after": GameState.morale,
+		"upkeep_paid": 0,
+	})
+	var arrival_summary: String = _build_starter_river_summary(
+		str(from_port.get("name", from_port_id)),
+		str(destination.get("name", destination_port_id)),
+		supply_cost,
+		chart_bonus_used,
+		contract_result
+	)
+	GameState.pending_status_message = arrival_summary
+	return {
+		"success": true,
+		"destination_port_id": destination_port_id,
+		"supply_cost": supply_cost,
+		"trip_costs": {"crew_wages": 0, "officer_wages": 0, "ship_upkeep": 0, "total_due": 0, "paid": 0, "unpaid": 0, "morale_change": 0},
+		"event_triggered": false,
+		"event_payload": {"triggered": false},
+		"arrival_summary": arrival_summary,
+		"contract_result": contract_result,
+	}
 
 func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 	var from_port_id: String = GameState.current_port_id
@@ -85,6 +140,18 @@ func _advance_trip(route: Dictionary, supply_cost: int) -> Dictionary:
 		"contract_result": contract_result,
 	}
 
+func _build_starter_river_summary(from_port_name: String, to_port_name: String, supply_cost: int, chart_bonus_used: float, contract_result: Dictionary) -> String:
+	var lines: Array[String] = []
+	lines.append("River crossing: %s -> %s" % [from_port_name, to_port_name])
+	lines.append("The storm took the bridge, so small boats are handling the crossing for now.")
+	lines.append("Supplies spent: %d | Travel time: %d hours" % [supply_cost, int(STARTER_RIVER_TRAVEL_HOURS)])
+	if GameState.get_travel_supply_discount() > 0.0 or chart_bonus_used > 0.0:
+		lines.append("Route planning still helped you trim supplies on the crossing.")
+	var waiting_count: int = int(contract_result.get("destination_waiting_count", 0))
+	if waiting_count > 0:
+		lines.append("Contracts waiting on cargo at this port: %d" % waiting_count)
+	return "\n".join(lines)
+
 func _build_arrival_summary(from_port_name: String, to_port_name: String, supply_cost: int, trip_costs: Dictionary, event_triggered: bool, contract_result: Dictionary, chart_bonus_used: float) -> String:
 	var lines: Array[String] = []
 	lines.append("Arrived: %s -> %s" % [from_port_name, to_port_name])
@@ -112,3 +179,8 @@ func _build_arrival_summary(from_port_name: String, to_port_name: String, supply
 		lines.append("Contracts waiting on cargo at this port: %d" % waiting_count)
 
 	return "\n".join(lines)
+
+func _is_starter_river_crossing(route: Dictionary) -> bool:
+	if not GameState.starter_bridge_out:
+		return false
+	return str(route.get("id", "")) in STARTER_RIVER_ROUTE_IDS
