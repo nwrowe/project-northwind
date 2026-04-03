@@ -313,7 +313,7 @@ offset_right = 2800.0
 offset_bottom = 1600.0
 color = Color(1, 0.866667, 0.431373, 0.12)
 
-[node name="DockShoreYard" type="Panel"]
+[node name="DockShoreYard" type="Panel" parent="World"]
 parent = "World"
 layout_mode = 0
 offset_left = 2352.0
