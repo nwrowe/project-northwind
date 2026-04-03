@@ -5,10 +5,8 @@ const PORT_ID := "aurelia"
 const SOURCE_PORT_ID := "varenna"
 const STARTER_GOOD_ID := "grain"
 const STARTER_QUANTITY := 2
-const STARTER_ADVANCE_MONEY := 24
 const STARTER_ADVANCE_SUPPLIES := 3
 const STARTER_PAYOUT := 58
-const REPEAT_ADVANCE_MONEY := 24
 const REPEAT_ADVANCE_SUPPLIES := 2
 const REPEAT_PAYOUT := 52
 
@@ -164,12 +162,17 @@ func _deliver_inn_order() -> Dictionary:
 	return {"success": true, "message": "The Lantern Cup takes the food at once. The innkeeper pays you %d gold and tells you the room is still yours while the bridge stays down and the inn keeps needing help." % payout}
 
 func _build_inn_order(first_run: bool) -> Dictionary:
+	var advance_money: int = _get_required_purchase_money(STARTER_GOOD_ID, STARTER_QUANTITY)
 	return {
 		"source_port": SOURCE_PORT_ID,
 		"target_port": PORT_ID,
 		"good_id": STARTER_GOOD_ID,
 		"quantity": STARTER_QUANTITY,
-		"advance_money": STARTER_ADVANCE_MONEY if first_run else REPEAT_ADVANCE_MONEY,
+		"advance_money": advance_money,
 		"advance_supplies": STARTER_ADVANCE_SUPPLIES if first_run else REPEAT_ADVANCE_SUPPLIES,
 		"payout": STARTER_PAYOUT if first_run else REPEAT_PAYOUT,
 	}
+
+func _get_required_purchase_money(good_id: String, quantity: int) -> int:
+	var market_system := MarketSystem.new()
+	return market_system.get_buy_price(SOURCE_PORT_ID, good_id) * quantity
