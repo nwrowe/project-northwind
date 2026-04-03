@@ -74,7 +74,7 @@ func _handle_movement(delta: float) -> void:
 
 func _update_camera() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
-	var target := player.position + player.size * 0.5 - viewport_size * 0.5
+	var target: Vector2 = player.position + player.size * 0.5 - viewport_size * 0.5
 	target.x = clamp(target.x, 0.0, max(0.0, WORLD_SIZE.x - viewport_size.x))
 	target.y = clamp(target.y, CAMERA_TOP_LOCK, max(CAMERA_TOP_LOCK, WORLD_SIZE.y - viewport_size.y))
 	world.position = -target
@@ -106,8 +106,8 @@ func _update_interaction_prompt() -> void:
 		interact_label.text = "%s [Enter]" % prompt
 
 func _update_edge_hint() -> void:
-	var near_north_exit := player.position.x > 2460.0 and player.position.y < 360.0
-	var near_east_exit := player.position.x > WORLD_SIZE.x - 220.0 and player.position.y > 520.0 and player.position.y < 980.0
+	var near_north_exit: bool = player.position.x > 2460.0 and player.position.y < 360.0
+	var near_east_exit: bool = player.position.x > WORLD_SIZE.x - 220.0 and player.position.y > 520.0 and player.position.y < 980.0
 	edge_hint_label.visible = near_north_exit or near_east_exit
 	if near_north_exit:
 		edge_hint_label.text = "North exit: inland path to Aurelia [Enter]"
@@ -115,8 +115,8 @@ func _update_edge_hint() -> void:
 		edge_hint_label.text = "East exit: upriver shoreline and bridge ruins [Enter]"
 
 func _handle_edge_transition() -> bool:
-	var near_north_exit := player.position.x > 2460.0 and player.position.y < 360.0
-	var near_east_exit := player.position.x > WORLD_SIZE.x - 220.0 and player.position.y > 520.0 and player.position.y < 980.0
+	var near_north_exit: bool = player.position.x > 2460.0 and player.position.y < 360.0
+	var near_east_exit: bool = player.position.x > WORLD_SIZE.x - 220.0 and player.position.y > 520.0 and player.position.y < 980.0
 	if near_north_exit:
 		_on_continue_pressed()
 		return true
