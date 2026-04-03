@@ -9,6 +9,7 @@ var upgrades_list: Array = []
 var contracts_list: Array = []
 var rumors_list: Array = []
 var climates_list: Array = []
+var npcs_list: Array = []
 
 var goods_by_id: Dictionary = {}
 var ports_by_id: Dictionary = {}
@@ -17,6 +18,7 @@ var routes_by_id: Dictionary = {}
 var upgrades_by_id: Dictionary = {}
 var contracts_by_id: Dictionary = {}
 var climates_by_id: Dictionary = {}
+var npcs_by_id: Dictionary = {}
 
 var validation_errors: Array[String] = []
 var is_data_valid: bool = false
@@ -30,6 +32,7 @@ const UPGRADES_PATH := "res://data/upgrades.json"
 const CONTRACTS_PATH := "res://data/contracts.json"
 const RUMORS_PATH := "res://data/rumors.json"
 const CLIMATES_PATH := "res://data/climates.json"
+const NPCS_PATH := "res://data/npcs.json"
 
 func load_all_data() -> bool:
 	validation_errors.clear()
@@ -44,6 +47,7 @@ func load_all_data() -> bool:
 	contracts_list = _load_json_array(CONTRACTS_PATH, "contracts")
 	rumors_list = _load_json_array(RUMORS_PATH, "rumors")
 	climates_list = _load_json_array(CLIMATES_PATH, "climates")
+	npcs_list = _load_json_array(NPCS_PATH, "npcs")
 
 	goods_by_id = _index_by_id(goods_list)
 	ports_by_id = _index_by_id(ports_list)
@@ -51,6 +55,7 @@ func load_all_data() -> bool:
 	upgrades_by_id = _index_by_id(upgrades_list)
 	contracts_by_id = _index_by_id(contracts_list)
 	climates_by_id = _index_by_id(climates_list)
+	npcs_by_id = _index_by_id(npcs_list)
 
 	routes_list = _expand_bidirectional_routes(routes_list)
 	routes_by_id = _index_by_id(routes_list)
@@ -87,6 +92,7 @@ func _validate_all_data() -> void:
 	_validate_required_fields(contracts_list, "contracts", ["id", "source_port", "target_port", "good_id", "quantity", "reward", "deadline_days"])
 	_validate_required_fields(climates_list, "climates", ["id", "name", "description", "resource_bias", "refining_bias"])
 	_validate_required_fields(rumors_list, "rumors", ["port_id"])
+	_validate_required_fields(npcs_list, "npcs", ["id", "port_id", "category", "business_role", "display_name", "title", "description", "traits", "location_hint"])
 
 	_validate_unique_ids(goods_list, "goods")
 	_validate_unique_ids(ports_list, "ports")
@@ -96,6 +102,7 @@ func _validate_all_data() -> void:
 	_validate_unique_ids(upgrades_list, "upgrades")
 	_validate_unique_ids(contracts_list, "contracts")
 	_validate_unique_ids(climates_list, "climates")
+	_validate_unique_ids(npcs_list, "npcs")
 
 	_validate_port_references()
 	_validate_route_references()
@@ -103,6 +110,7 @@ func _validate_all_data() -> void:
 	_validate_event_payloads()
 	_validate_upgrade_payloads()
 	_validate_rumor_references()
+	_validate_npc_references()
 
 func _validate_required_fields(items: Array, label: String, required_fields: Array[String]) -> void:
 	for i in range(items.size()):
@@ -219,6 +227,21 @@ func _validate_rumor_references() -> void:
 		if not port_id.is_empty() and not ports_by_id.has(port_id):
 			validation_errors.append("rumors[%d] references unknown port_id '%s'." % [i, port_id])
 
+func _validate_npc_references() -> void:
+	for i in range(npcs_list.size()):
+		var npc_data: Variant = npcs_list[i]
+		if not npc_data is Dictionary:
+			continue
+		var npc_dict: Dictionary = npc_data
+		var port_id: String = str(npc_dict.get("port_id", ""))
+		if not ports_by_id.has(port_id):
+			validation_errors.append("NPC '%s' references unknown port_id '%s'." % [str(npc_dict.get("id", "")), port_id])
+		var category: String = str(npc_dict.get("category", ""))
+		if category != "resident" and category != "notable":
+			validation_errors.append("NPC '%s' has unsupported category '%s'." % [str(npc_dict.get("id", "")), category])
+		if not npc_dict.get("traits", []) is Array:
+			validation_errors.append("NPC '%s' must have an array of traits." % str(npc_dict.get("id", "")))
+
 func _index_by_id(items: Array) -> Dictionary:
 	var indexed := {}
 	for item in items:
@@ -257,6 +280,9 @@ func get_upgrade(id: String) -> Dictionary:
 func get_climate(id: String) -> Dictionary:
 	return climates_by_id.get(id, {})
 
+func get_npc(id: String) -> Dictionary:
+	return npcs_by_id.get(id, {})
+
 func get_routes_from(port_id: String) -> Array:
 	var results: Array = []
 	for route in routes_list:
@@ -276,4 +302,25 @@ func get_rumors_for_port(port_id: String) -> Array:
 	for rumor in rumors_list:
 		if str(rumor.get("port_id", "")) == port_id:
 			results.append(rumor)
+	return results
+
+func get_npcs_for_port(port_id: String) -> Array:
+	var results: Array = []
+	for npc_data in npcs_list:
+		if str(npc_data.get("port_id", "")) == port_id:
+			results.append(npc_data)
+	return results
+
+func get_residents_for_port(port_id: String) -> Array:
+	var results: Array = []
+	for npc_data in npcs_list:
+		if str(npc_data.get("port_id", "")) == port_id and str(npc_data.get("category", "")) == "resident":
+			results.append(npc_data)
+	return results
+
+func get_notable_npcs_for_port(port_id: String) -> Array:
+	var results: Array = []
+	for npc_data in npcs_list:
+		if str(npc_data.get("port_id", "")) == port_id and str(npc_data.get("category", "")) == "notable":
+			results.append(npc_data)
 	return results
