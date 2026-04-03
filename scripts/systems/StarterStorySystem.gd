@@ -5,11 +5,11 @@ const PORT_ID := "aurelia"
 const SOURCE_PORT_ID := "varenna"
 const STARTER_GOOD_ID := "grain"
 const STARTER_QUANTITY := 2
-const STARTER_ADVANCE_MONEY := 30
-const STARTER_ADVANCE_SUPPLIES := 6
+const STARTER_ADVANCE_MONEY := 24
+const STARTER_ADVANCE_SUPPLIES := 3
 const STARTER_PAYOUT := 58
-const REPEAT_ADVANCE_MONEY := 30
-const REPEAT_ADVANCE_SUPPLIES := 6
+const REPEAT_ADVANCE_MONEY := 24
+const REPEAT_ADVANCE_SUPPLIES := 2
 const REPEAT_PAYOUT := 52
 
 const STAGE_INN_INTRO := "inn_intro_available"
@@ -24,11 +24,15 @@ func has_active_inn_order() -> bool:
 	return not GameState.inn_supply_order.is_empty()
 
 func get_sleep_cost() -> int:
+	if GameState.starter_bridge_out:
+		return 0
 	if GameState.free_inn_nights > 0:
 		return 0
 	return 2 + GameState.crew_count
 
 func consume_sleep_payment() -> void:
+	if GameState.starter_bridge_out:
+		return
 	if GameState.free_inn_nights > 0:
 		GameState.free_inn_nights = max(0, GameState.free_inn_nights - 1)
 		return
@@ -59,7 +63,7 @@ func get_tavern_story_view() -> Dictionary:
 		return {
 			"visible": true,
 			"title": "Lantern Cup Supply Run",
-			"text": "The inn still needs %d %s from %s. You were advanced %d gold and %d supplies to make the run possible. Payment on return will be %d gold." % [quantity, good_name, source_name, advance_money, advance_supplies, payout],
+			"text": "The inn still needs %d %s from %s. Last night's severe storm knocked out the bridge, so the rowboat crossing is the only fast way over. You were advanced %d gold and %d supplies to make the run possible. Payment on return will be %d gold." % [quantity, good_name, source_name, advance_money, advance_supplies, payout],
 			"action_text": "",
 			"action_id": "",
 		}
@@ -69,7 +73,7 @@ func get_tavern_story_view() -> Dictionary:
 			return {
 				"visible": true,
 				"title": "A Bed for the Night",
-				"text": "Maris has already spoken to the Lantern Cup for you. The innkeeper offers you one room for free tonight. By the hearth you overhear that the regular supply boat from Varenna is overdue.",
+				"text": "The storm that washed you ashore also knocked out the bridge to Varenna. Maris has already spoken to the Lantern Cup for you. The innkeeper offers you a room for free while the town sorts itself out after the damage.",
 				"action_text": "Accept Free Room",
 				"action_id": "accept_free_room",
 			}
@@ -77,7 +81,7 @@ func get_tavern_story_view() -> Dictionary:
 			return {
 				"visible": true,
 				"title": "A First Real Errand",
-				"text": "The innkeeper asks if the rowboat outside is yours. If you can fetch 2 Grain from Varenna before the pantry runs dry, the Lantern Cup will advance coin and provisions and pay you on return.",
+				"text": "With the bridge down, the inn's regular supply run from Varenna has failed. The innkeeper asks if the rowboat outside is yours. If you can cross over and fetch 2 Grain, the Lantern Cup will cover your costs, keep your room, and pay you on return.",
 				"action_text": "Accept Supply Run",
 				"action_id": "accept_supply_run",
 			}
@@ -85,7 +89,7 @@ func get_tavern_story_view() -> Dictionary:
 			return {
 				"visible": true,
 				"title": "Lantern Cup Orders",
-				"text": "Now that you have proven you can make the run, the innkeeper will occasionally pay you to keep Aurelia stocked when the regular boats are late.",
+				"text": "Until the bridge is repaired, the Lantern Cup still needs small urgent runs from Varenna. Your room remains covered as long as you keep helping the inn stay stocked.",
 				"action_text": "Ask for Another Run",
 				"action_id": "accept_supply_run",
 			}
@@ -113,7 +117,7 @@ func get_market_story_hint() -> String:
 	var quantity: int = int(order.get("quantity", 0))
 	var good_id: String = str(order.get("good_id", ""))
 	var good_name: String = str(GameData.get_good(good_id).get("name", good_id))
-	return "Inn order: buy %d %s for the Lantern Cup in Aurelia." % [quantity, good_name]
+	return "Inn order: buy %d %s for the Lantern Cup in Aurelia while the bridge is out." % [quantity, good_name]
 
 func can_deliver_active_order() -> bool:
 	if not has_active_inn_order():
@@ -128,7 +132,7 @@ func _accept_free_room() -> Dictionary:
 		return {"success": false, "message": "The room arrangement has already been made."}
 	GameState.free_inn_nights = max(GameState.free_inn_nights, 1)
 	GameState.inn_supply_story_stage = STAGE_JOB_OFFER
-	return {"success": true, "message": "You are given a dry room upstairs for the night. Over soup and low voices, you learn the inn's Varenna supply boat is missing and the pantry is running short."}
+	return {"success": true, "message": "You are given a dry room upstairs for the night. Over soup and low voices, you learn the storm wrecked the bridge to Varenna and stranded the inn's normal food run."}
 
 func _accept_supply_run() -> Dictionary:
 	if has_active_inn_order():
@@ -142,7 +146,7 @@ func _accept_supply_run() -> Dictionary:
 	GameState.supplies += int(order.get("advance_supplies", 0))
 	GameState.inn_supply_story_stage = STAGE_JOB_ACTIVE
 	var source_name: String = str(GameData.get_port(str(order.get("source_port", SOURCE_PORT_ID))).get("name", SOURCE_PORT_ID))
-	return {"success": true, "message": "The innkeeper gives you %d gold, adds %d supplies to your rowboat, and asks for %d Grain from %s. There will be more coin waiting if you return with the food." % [int(order.get("advance_money", 0)), int(order.get("advance_supplies", 0)), int(order.get("quantity", 0)), source_name]}
+	return {"success": true, "message": "The innkeeper gives you %d gold, adds %d supplies to your rowboat, and asks for %d Grain from %s. With the bridge gone, the rowboat is the fastest way to make the crossing." % [int(order.get("advance_money", 0)), int(order.get("advance_supplies", 0)), int(order.get("quantity", 0)), source_name]}
 
 func _deliver_inn_order() -> Dictionary:
 	if not can_deliver_active_order():
@@ -157,7 +161,7 @@ func _deliver_inn_order() -> Dictionary:
 	GameState.inn_supply_order = {}
 	GameState.inn_supply_runs_completed += 1
 	GameState.inn_supply_story_stage = STAGE_REPEATABLE
-	return {"success": true, "message": "The Lantern Cup takes the food at once. The innkeeper pays you %d gold and says there will be more work whenever the regular boats are late." % payout}
+	return {"success": true, "message": "The Lantern Cup takes the food at once. The innkeeper pays you %d gold and tells you the room is still yours while the bridge stays down and the inn keeps needing help." % payout}
 
 func _build_inn_order(first_run: bool) -> Dictionary:
 	return {

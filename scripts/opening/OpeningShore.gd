@@ -32,7 +32,7 @@ func _ready() -> void:
 	start_position = player.position
 	objective_label.text = OBJECTIVE_MOVE
 	hint_label.text = "Move with arrow keys or WASD. Press Enter to interact."
-	story_label.text = "Cold surf. Splintered wood. The tide has already started to pull away."
+	story_label.text = "Cold surf. Splintered wood. The storm has only just passed."
 	interact_label.visible = false
 	continue_button.visible = false
 	continue_button.text = "Continue to Aurelia"
@@ -98,7 +98,7 @@ func _interact_boat() -> void:
 		story_label.text = "Salt, split timber, a torn strap. Nothing aboard tells you your name."
 		objective_label.text = OBJECTIVE_DOCK
 		return
-	story_label.text = "The little boat is finished. Whatever carried you here will not carry you farther."
+	story_label.text = "The little boat is battered but still usable. Whatever carried you here was the storm's mercy, not its kindness."
 
 func _interact_satchel() -> void:
 	satchel_checked = true
@@ -112,7 +112,7 @@ func _interact_fisher() -> void:
 
 	if not fisher_spoken:
 		fisher_spoken = true
-		story_label.text = "The fisher says Aurelia is up the bluff. It is a poor little port, but poor ports still need hands."
+		story_label.text = "The fisher says Aurelia is up the bluff. The storm wrecked the bridge to Varenna, but small boats can still make the river crossing."
 		continue_button.visible = true
 		transition_armed = true
 		return
@@ -123,7 +123,7 @@ func _on_continue_pressed() -> void:
 	if not transition_armed:
 		return
 	GameState.current_port_id = "aurelia"
-	GameState.pending_status_message = "You reach Aurelia soaked, nameless, and broke. Maris sends you toward the Lantern Cup, where there is at least a dry room waiting for the night."
+	GameState.pending_status_message = "You reach Aurelia after the storm, soaked and nameless. Maris sends you toward the Lantern Cup, where there is a dry room waiting and talk of a washed-out bridge to Varenna."
 	ScreenRouter.show_port_screen()
 
 func _is_near(node: Control) -> bool:

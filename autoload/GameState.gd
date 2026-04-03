@@ -43,6 +43,7 @@ var free_inn_nights: int = 0
 var inn_supply_story_stage: String = ""
 var inn_supply_order: Dictionary = {}
 var inn_supply_runs_completed: int = 0
+var starter_bridge_out: bool = true
 
 var recent_trip_reports: Array = []
 var morale_history: Array[int] = []
@@ -78,7 +79,7 @@ func new_game() -> void:
 	morale = 0
 	game_time_seconds = START_OF_DAY_SECONDS
 	weather_cycle_index = _get_weather_cycle_index()
-	_roll_weather_for_cycle(weather_cycle_index)
+	current_weather = WEATHER_STORM
 	known_port_ids = ["aurelia"]
 	ship_task_last_day = {}
 	next_trip_chart_discount = 0.0
@@ -86,6 +87,7 @@ func new_game() -> void:
 	inn_supply_story_stage = "inn_intro_available"
 	inn_supply_order = {}
 	inn_supply_runs_completed = 0
+	starter_bridge_out = true
 	recent_trip_reports = []
 	morale_history = []
 	debug_contract_success_count = 0
@@ -127,6 +129,7 @@ func to_dict() -> Dictionary:
 		"inn_supply_story_stage": inn_supply_story_stage,
 		"inn_supply_order": inn_supply_order,
 		"inn_supply_runs_completed": inn_supply_runs_completed,
+		"starter_bridge_out": starter_bridge_out,
 		"recent_trip_reports": recent_trip_reports,
 		"morale_history": morale_history,
 		"debug_contract_success_count": debug_contract_success_count,
@@ -167,6 +170,7 @@ func load_from_dict(data: Dictionary) -> void:
 	inn_supply_story_stage = str(data.get("inn_supply_story_stage", ""))
 	inn_supply_order = data.get("inn_supply_order", {})
 	inn_supply_runs_completed = int(data.get("inn_supply_runs_completed", 0))
+	starter_bridge_out = bool(data.get("starter_bridge_out", inn_supply_runs_completed == 0))
 	recent_trip_reports = data.get("recent_trip_reports", [])
 	morale_history = Array(data.get("morale_history", []), TYPE_INT, "", null)
 	debug_contract_success_count = int(data.get("debug_contract_success_count", 0))
@@ -189,6 +193,9 @@ func load_from_dict(data: Dictionary) -> void:
 		inn_supply_story_stage = "inn_intro_available"
 	_update_weather_state()
 	_normalize_morale()
+
+func resolve_starter_bridge_repair() -> void:
+	starter_bridge_out = false
 
 func _normalize_active_contracts(raw_contracts: Array) -> Array:
 	var normalized: Array = []
