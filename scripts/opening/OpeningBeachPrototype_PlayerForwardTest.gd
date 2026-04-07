@@ -224,9 +224,9 @@ func _setup_player_forward_walk_test() -> void:
 	player_sprite.frame = 0
 	player_sprite.stop()
 	player_sprite_ready = true
-	player.modulate = Color(1, 1, 1, 0)
 	if is_instance_valid(player_label):
 		player_label.visible = false
+	player.self_modulate = Color(1, 1, 1, 0)
 	story_label.text = "Forward-walk test loaded. The four front-facing PNGs are being reused for movement in every direction until the other directional sprites are ready."
 
 func _set_player_walk_visual() -> void:
