@@ -219,7 +219,7 @@ func _setup_player_forward_walk_test() -> void:
 	player_sprite.frame = 0
 	player_sprite.stop()
 	player_sprite_ready = true
-	player.modulate = Color(1, 1, 1, 0)
+	player.self_modulate = Color(1, 1, 1, 0)
 	if is_instance_valid(player_label):
 		player_label.visible = false
 	story_label.text = "Forward-walk test loaded from res://art/characters/walking0.png through walking2.png. These front-facing frames are being reused for movement in every direction for now."
