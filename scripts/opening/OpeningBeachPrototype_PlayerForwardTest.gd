@@ -2,7 +2,7 @@ extends Control
 
 const TILE_SIZE := 64
 const WORLD_SIZE := Vector2(3072, 1792)
-const PLAYER_SPEED := 260.0
+const PLAYER_SPEED := 180.0
 const PLAYER_SIZE := Vector2(40, 56)
 const PLAYER_MARGIN := 24.0
 const CAMERA_TOP_LOCK := 0.0
