@@ -17,14 +17,13 @@ const OBJECTIVE_DONE := "Explore the beach and follow the path inland toward Aur
 const PLAYER_FRAME_PIXEL_SIZE := Vector2(16, 32)
 const PLAYER_SPRITE_SCALE := 2.0
 const PLAYER_SPRITE_FPS := 8.0
-const PLAYER_SPRITE_SEARCH_DIRS := [
-	"res://art/characters/player",
-	"res://art/characters/player/forward_walk",
-	"res://art/characters/main_character",
-	"res://art/player",
-	"res://art/sprites/player",
+
+const PLAYER_FORWARD_FRAMES := [
+	"res://art/characters/walking0.png",
+	"res://art/characters/walking1.png",
+	"res://art/characters/walking2.png",
+	"res://art/characters/walking1.png",
 ]
-const PLAYER_SPRITE_KEYWORDS := ["walk", "forward", "front", "down", "south", "idle"]
 
 @onready var world := $World
 @onready var player := $World/Player
@@ -206,17 +205,20 @@ func _setup_player_forward_walk_test() -> void:
 	player_sprite.scale = Vector2.ONE * PLAYER_SPRITE_SCALE
 	player.add_child(player_sprite)
 
-	var walk_frames := _discover_forward_walk_frames()
-	if walk_frames.size() < 1:
-		story_label.text = "Forward-walk test scene loaded. No forward walking PNGs were auto-detected yet, so the placeholder player remains visible."
-		return
-
 	var frames := SpriteFrames.new()
 	frames.add_animation("forward_walk")
 	frames.set_animation_loop("forward_walk", true)
 	frames.set_animation_speed("forward_walk", PLAYER_SPRITE_FPS)
-	for texture in walk_frames:
-		frames.add_frame("forward_walk", texture)
+
+	for frame_path in PLAYER_FORWARD_FRAMES:
+		var texture: Texture2D = load(frame_path) as Texture2D
+		if texture != null:
+			frames.add_frame("forward_walk", texture)
+
+	if frames.get_frame_count("forward_walk") == 0:
+		story_label.text = "Forward-walk test scene loaded, but walking0/1/2 PNGs were not found in res://art/characters."
+		return
+
 	player_sprite.sprite_frames = frames
 	player_sprite.animation = "forward_walk"
 	player_sprite.frame = 0
@@ -226,41 +228,6 @@ func _setup_player_forward_walk_test() -> void:
 	if is_instance_valid(player_label):
 		player_label.visible = false
 	story_label.text = "Forward-walk test loaded. The four front-facing PNGs are being reused for movement in every direction until the other directional sprites are ready."
-
-func _discover_forward_walk_frames() -> Array[Texture2D]:
-	var discovered_paths: Array[String] = []
-	for directory_path in PLAYER_SPRITE_SEARCH_DIRS:
-		var dir := DirAccess.open(directory_path)
-		if dir == null:
-			continue
-		dir.list_dir_begin()
-		var file_name := dir.get_next()
-		while file_name != "":
-			if not dir.current_is_dir() and file_name.to_lower().ends_with(".png"):
-				var full_path := directory_path.path_join(file_name)
-				if _looks_like_forward_walk_frame(file_name):
-					discovered_paths.append(full_path)
-			file_name = dir.get_next()
-		dir.list_dir_end()
-		if discovered_paths.size() >= 4:
-			break
-
-	discovered_paths.sort()
-	var textures: Array[Texture2D] = []
-	for frame_path in discovered_paths:
-		var texture := load(frame_path) as Texture2D
-		if texture != null:
-			textures.append(texture)
-		if textures.size() == 4:
-			break
-	return textures
-
-func _looks_like_forward_walk_frame(file_name: String) -> bool:
-	var lower := file_name.to_lower()
-	for keyword in PLAYER_SPRITE_KEYWORDS:
-		if keyword in lower:
-			return true
-	return false
 
 func _set_player_walk_visual() -> void:
 	if not player_sprite_ready or player_sprite == null:
