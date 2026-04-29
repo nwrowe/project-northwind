@@ -22,6 +22,11 @@ config/features=PackedStringArray("4.6")
 
 GameData="*res://autoload/GameData.gd"
 GameState="*res://autoload/GameState.gd"
+TimeState="*res://autoload/TimeState.gd"
+ShipState="*res://autoload/ShipState.gd"
+CrewState="*res://autoload/CrewState.gd"
+EconomyLedger="*res://autoload/EconomyLedger.gd"
+StoryFlags="*res://autoload/StoryFlags.gd"
 SaveManager="*res://autoload/SaveManager.gd"
 ScreenRouter="*res://autoload/ScreenRouter.gd"
 
